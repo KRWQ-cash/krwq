@@ -47,5 +47,3 @@ contract DeployOFTAdapter is Script {
         vm.stopBroadcast();
     }
 }
-
-

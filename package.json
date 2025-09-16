@@ -1,0 +1,31 @@
+{
+  "name": "ikrw-contracts",
+  "version": "1.0.0",
+  "description": "A Solidity implementation of an ERC20 token with minting capabilities, built using Foundry and OpenZeppelin contracts.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IQAIcom/ikrw_contracts.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/IQAIcom/ikrw_contracts/issues"
+  },
+  "homepage": "https://github.com/IQAIcom/ikrw_contracts#readme",
+  "dependencies": {
+    "@layerzerolabs/oapp-evm-upgradeable": "^0.1.2",
+    "@layerzerolabs/oft-evm": "^3.2.1",
+    "@layerzerolabs/oft-evm-upgradeable": "^3.2.0",
+    "@openzeppelin/contracts-upgradeable": "^5.4.0"
+  }
+}

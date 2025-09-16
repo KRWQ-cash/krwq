@@ -1,0 +1,15 @@
+[profile.default]
+solc_version = "0.8.24"
+src = "src"
+out = "out"
+libs = ["lib", "node_modules"]
+remappings = [
+  "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+  "forge-std/=lib/forge-std/src/",
+  "@layerzerolabs/=node_modules/@layerzerolabs/",
+  "@openzeppelin/contracts-upgradeable/=node_modules/@openzeppelin/contracts-upgradeable/"
+]
+
+[lint]
+# Allow non-mixedCase function names (needed to comply with external specs)
+exclude_lints = ["mixed-case-function"]

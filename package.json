@@ -1,7 +1,7 @@
 {
-  "name": "ikrw-contracts",
+  "name": "krwt-contracts",
   "version": "1.0.0",
-  "description": "A Solidity implementation of an ERC20 token with minting capabilities, built using Foundry and OpenZeppelin contracts.",
+  "description": "🪙 Korean Won Token (KRWT) - A comprehensive Solidity implementation with ERC4626 vault functionality, LayerZero cross-chain bridging, and Oracle integration. Built using Foundry and OpenZeppelin contracts.",
   "main": "index.js",
   "directories": {
     "lib": "lib",

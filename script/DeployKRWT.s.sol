@@ -27,12 +27,7 @@ contract DeployKRWT is Script {
         console.log("ProxyAdmin:", address(admin));
 
         // 3) Encode initializer
-        bytes memory initData = abi.encodeWithSelector(
-            KRWT.initialize.selector,
-            owner,
-            name,
-            symbol
-        );
+        bytes memory initData = abi.encodeWithSelector(KRWT.initialize.selector, owner, name, symbol);
 
         // 4) Transparent proxy
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(address(impl), address(admin), initData);

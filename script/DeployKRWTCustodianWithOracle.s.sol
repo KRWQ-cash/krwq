@@ -15,7 +15,6 @@ contract DeployKRWTCustodianWithOracle is Script {
         // address deployer = vm.addr(pk);
         address owner = vm.envAddress("OWNER");
 
-
         address krwt = vm.envAddress("KRWT_ADDRESS");
         address custodianTkn = vm.envAddress("CUSTODIAN_TOKEN_ADDRESS");
 

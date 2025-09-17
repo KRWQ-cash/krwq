@@ -141,7 +141,7 @@ contract KRWTCustodianWithOracle is KRWTCustodian {
         returns (uint256 _shares)
     {
         _shares = Math.mulDiv(
-            super._convertToShares(_assets, _rounding), getCustodianOraclePrice(), (10 ** oracleDecimals), _rounding
+            super._convertToShares(_assets, _rounding), (10 ** oracleDecimals), getCustodianOraclePrice(), _rounding
         );
     }
 
@@ -156,7 +156,7 @@ contract KRWTCustodianWithOracle is KRWTCustodian {
         returns (uint256 _assets)
     {
         _assets = Math.mulDiv(
-            super._convertToAssets(_shares, _rounding), (10 ** oracleDecimals), getCustodianOraclePrice(), _rounding
+            super._convertToAssets(_shares, _rounding), getCustodianOraclePrice(), (10 ** oracleDecimals), _rounding
         );
     }
 

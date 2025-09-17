@@ -12,7 +12,9 @@ import {KRWTCustodianWithOracle} from "../src/KRWTCustodianWithOracle.sol";
 contract DeployKRWTCustodianWithOracle is Script {
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(pk);
+        // address deployer = vm.addr(pk);
+        address owner = vm.envAddress("OWNER");
+
 
         address krwt = vm.envAddress("KRWT_ADDRESS");
         address custodianTkn = vm.envAddress("CUSTODIAN_TOKEN_ADDRESS");
@@ -30,14 +32,14 @@ contract DeployKRWTCustodianWithOracle is Script {
         KRWTCustodianWithOracle impl = new KRWTCustodianWithOracle(krwt, custodianTkn);
         console.log("Impl:", address(impl));
 
-        // 2) ProxyAdmin (admin is deployer)
-        ProxyAdmin admin = new ProxyAdmin(deployer);
+        // 2) ProxyAdmin (admin is owner)
+        ProxyAdmin admin = new ProxyAdmin(owner);
         console.log("ProxyAdmin:", address(admin));
 
         // 3) Encode initializer
         bytes memory initData = abi.encodeWithSelector(
             KRWTCustodianWithOracle.initialize.selector,
-            deployer, // owner
+            owner,
             custodianOracle,
             maximumOracleDelay,
             mintCap,

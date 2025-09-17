@@ -12,15 +12,14 @@ import {KRWTOFTAdapter} from "../src/bridge/KRWTOFTAdapter.sol";
 /// @notice Deploys KRWTOFTAdapter (OFTAdapterUpgradeable) behind a TransparentUpgradeableProxy
 /// Env vars:
 /// - PRIVATE_KEY: uint (hex without 0x)
-/// - UNDERLYING_TOKEN: address
+/// - KRWT_ADDRESS: address
 /// - LZ_ENDPOINT: address
 /// - OWNER: address (delegate + ProxyAdmin owner)
 contract DeployOFTAdapter is Script {
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(pk);
 
-        address token = vm.envAddress("UNDERLYING_TOKEN");
+        address token = vm.envAddress("KRWT_ADDRESS");
         address lzEndpoint = vm.envAddress("LZ_ENDPOINT");
         address owner = vm.envAddress("OWNER");
 

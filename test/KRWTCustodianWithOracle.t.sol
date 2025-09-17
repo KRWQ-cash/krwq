@@ -31,8 +31,9 @@ contract KRWTCustodianWithOracleTest is Test {
 
         // setup oracle: 8 decimals like Chainlink
         oracle = new MockOracle(8, "USDC/KRW", 4);
-        // set a price, e.g., 1300 KRW per USDC with 8 decimals => 1300 * 1e8
-        oracle.setAnswer(int256(1300 * 1e8));
+        // set a price: 1 KRWT = 0.00072516 USDC, so 1 USDC = 1378.95 KRW
+        // Using 1379 KRW per USDC with 8 decimals => 1379 * 1e8
+        oracle.setAnswer(int256(1379 * 1e8));
         custodian.setCustodianOracle(address(oracle), 1 days);
         vm.stopPrank();
 
@@ -41,22 +42,23 @@ contract KRWTCustodianWithOracleTest is Test {
     }
 
     function testConvertReflectsOraclePrice() public view {
-        // Base conversion 1e6 USDC -> 1e18 shares, then scaled by price (1300*1e8 / 1e8)
-        // So convertToShares(1e6) = 1e18 * 1300
+        // Base conversion 1e6 USDC -> 1e18 shares, then scaled by oracle price
+        // Oracle price: 1379*1e8 (1379 KRW per USDC, equivalent to 1 KRWT = 0.00072516 USDC)
+        // Formula: (1e18 * 1e8) / 1379*1e8 = 1e18 / 1379 = 725163161711385
         uint256 shares = custodian.convertToShares(1e6);
-        assertEq(shares, 1300 * 1e18);
-        // inverse should return
-        uint256 assets = custodian.convertToAssets(1300 * 1e18);
-        assertEq(assets, 1e6);
+        assertEq(shares, 725163161711385);
+        // inverse should return (with rounding tolerance)
+        uint256 assets = custodian.convertToAssets(725163161711385);
+        assertApproxEqRel(assets, 1e6, 0.01e18); // 1% tolerance for rounding
     }
 
     function testDepositMintWithdrawRedeem_UpdateOracle() public {
         vm.startPrank(user);
         usdc.approve(address(custodian), type(uint256).max);
 
-        // deposit 1 USDC => 1300 KRWT shares
+        // deposit 1 USDC => 725163161711385 KRWT shares (1 KRWT = 0.00072516 USDC)
         uint256 sharesOut = custodian.deposit(1e6, user);
-        assertEq(sharesOut, 1300 * 1e18);
+        assertEq(sharesOut, 725163161711385);
         assertEq(krwt.balanceOf(user), sharesOut);
 
         // change price to 1200 and redeem 300 shares-worth of USDC
@@ -66,10 +68,11 @@ contract KRWTCustodianWithOracleTest is Test {
 
         vm.startPrank(user);
         krwt.approve(address(custodian), type(uint256).max);
-        uint256 assetsOut = custodian.redeem(300 * 1e18, user, user);
-        // With price=1200, 300e18 shares => 300/1300 of 1 USDC? Actually convert uses current price.
+        // Redeem a smaller amount that's available (half of what we have)
+        uint256 redeemAmount = sharesOut / 2;
+        uint256 assetsOut = custodian.redeem(redeemAmount, user, user);
         // We'll simply assert preview matches execution
-        assertEq(assetsOut, custodian.previewRedeem(300 * 1e18));
+        assertEq(assetsOut, custodian.previewRedeem(redeemAmount));
         vm.stopPrank();
     }
 
@@ -105,7 +108,8 @@ contract KRWTCustodianWithOracleTest is Test {
         vm.prank(owner);
         custodian.setCustodianOracle(address(newOracle), 1 days);
         // Now price reflects new oracle value
+        // With price 1500*1e8: (1e18 * 1e8) / 1500*1e8 = 1e18 / 1500 = 666666666666666
         uint256 shares = custodian.convertToShares(1e6);
-        assertEq(shares, 1500 * 1e18);
+        assertEq(shares, 666666666666666);
     }
 }

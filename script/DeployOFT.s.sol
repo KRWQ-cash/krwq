@@ -12,17 +12,15 @@ import {KRWTOFT} from "../src/bridge/KRWTOFT.sol";
 /// @notice Deploys KRWTOFT (OFTUpgradeable) behind a TransparentUpgradeableProxy
 /// Env vars:
 /// - PRIVATE_KEY: uint (hex without 0x)
-/// - OFT_NAME: string
-/// - OFT_SYMBOL: string
+/// - TOKEN_NAME: string
+/// - TOKEN_SYMBOL: string
 /// - LZ_ENDPOINT: address
 /// - OWNER: address (delegate + ProxyAdmin owner)
 contract DeployOFT is Script {
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(pk);
-
-        string memory name = vm.envString("OFT_NAME");
-        string memory symbol = vm.envString("OFT_SYMBOL");
+        string memory name = vm.envString("TOKEN_NAME");
+        string memory symbol = vm.envString("TOKEN_SYMBOL");
         address lzEndpoint = vm.envAddress("LZ_ENDPOINT");
         address owner = vm.envAddress("OWNER");
 

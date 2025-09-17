@@ -12,24 +12,24 @@ import {KRWT} from "../src/KRWT.sol";
 contract DeployKRWT is Script {
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(pk);
+        address owner = vm.envAddress("OWNER");
 
         string memory name = vm.envString("TOKEN_NAME"); // e.g., "KRWT"
         string memory symbol = vm.envString("TOKEN_SYMBOL"); // e.g., "KRWT"
 
         vm.startBroadcast(pk);
         // 1) Implementation
-        KRWT impl = new KRWT(deployer, name, symbol);
+        KRWT impl = new KRWT(owner, name, symbol);
         console.log("Impl:", address(impl));
 
-        // 2) ProxyAdmin (admin is deployer)
-        ProxyAdmin admin = new ProxyAdmin(deployer);
+        // 2) ProxyAdmin (admin is owner)
+        ProxyAdmin admin = new ProxyAdmin(owner);
         console.log("ProxyAdmin:", address(admin));
 
         // 3) Encode initializer
         bytes memory initData = abi.encodeWithSelector(
             KRWT.initialize.selector,
-            deployer, // initial owner
+            owner,
             name,
             symbol
         );

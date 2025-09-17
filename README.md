@@ -62,7 +62,13 @@ The KRWT ecosystem consists of multiple interconnected contracts that provide:
 │   ├── 🚀 DeployKRWT.s.sol                   # Token deployment script
 │   ├── 🏦 DeployKRWTCustodianWithOracle.s.sol # Oracle vault deployment
 │   ├── 🌉 DeployOFT.s.sol                    # OFT deployment script
-│   └── 🔗 DeployOFTAdapter.s.sol             # OFT Adapter deployment
+│   ├── 🔗 DeployOFTAdapter.s.sol             # OFT Adapter deployment
+│   ├── ⚙️ DeployConfig.s.sol                 # LayerZero config (Ethereum)
+│   ├── ⚙️ DeployConfigOFT.s.sol              # LayerZero config (Base)
+│   ├── 🔄 TransferOwnershipETH.s.sol         # Ethereum ownership transfer script
+│   ├── 🔄 TransferOwnershipBase.s.sol        # Base ownership transfer script
+│   └── 📂 utils/
+│       └── 🔧 LZConfigUtils.sol              # LayerZero configuration utilities
 ├── 📂 test/
 │   ├── 🧪 KRWT.t.sol                         # Token tests
 │   ├── 🏦 KRWTCustodian.t.sol                # Vault tests
@@ -252,14 +258,50 @@ forge script script/DeployConfigOFT.s.sol \
   --broadcast
 ```
 
-5) Post-deploy ownership checks
+5) Transfer ownership and delegates (optional)
 
-- DeployAll already initiates ownership transfer of `KRWT` and the `Custodian` to `OWNER_ETH`.
-- On Base, transfer `KRWTOFT` ownership to `OWNER_BASE` if desired:
+Transfer ownership and delegate control of the OFT and adapter to final owners:
+
+**Ethereum side (Adapter):**
 
 ```bash
+# Required env (uses existing OWNER_ETH from step 2)
+export PRIVATE_KEY=<deployer_pk_hex_no_0x>
+export ETH_ADAPTER=<adapter_proxy_from_step_2>
+export OWNER_ETH=<final_owner_address_on_eth>
+
+# Transfer Ethereum Adapter ownership and delegate
+forge script script/TransferOwnershipETH.s.sol \
+  --rpc-url $ETH_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast
+```
+
+**Base side (OFT):**
+
+```bash
+# Required env (uses existing OWNER_BASE from step 1)
+export PRIVATE_KEY=<deployer_pk_hex_no_0x>
+export BASE_OFT=<oft_proxy_from_step_1>
+export OWNER_BASE=<final_owner_address_on_base>
+
+# Transfer Base OFT ownership and delegate
+forge script script/TransferOwnershipBase.s.sol \
+  --rpc-url $BASE_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast
+```
+
+**Note:** These scripts will transfer both ownership and delegate control to the same address (`OWNER_ETH`/`OWNER_BASE`). If you only need to transfer ownership, you can use individual `cast` commands:
+
+```bash
+# Transfer Base OFT ownership only
 cast send <BASE_OFT> "transferOwnership(address)" $OWNER_BASE \
   --rpc-url $BASE_RPC_URL --private-key $PRIVATE_KEY
+
+# Transfer Ethereum Adapter ownership only  
+cast send <ETH_ADAPTER> "transferOwnership(address)" $OWNER_ETH \
+  --rpc-url $ETH_RPC_URL --private-key $PRIVATE_KEY
 ```
 
 6) Verify (optional)

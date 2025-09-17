@@ -8,12 +8,14 @@ import {ILayerZeroEndpointV2} from "@layerzerolabs/lz-evm-protocol-v2/contracts/
 import {SetConfigParam} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol";
 import {UlnConfig} from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/UlnBase.sol";
 import {ExecutorConfig} from "@layerzerolabs/lz-evm-messagelib-v2/contracts/SendLibBase.sol";
+import {IOAppOptionsType3} from "@layerzerolabs/oapp-evm/contracts/oapp/interfaces/IOAppOptionsType3.sol";
+import {LZConfigUtils} from "./utils/LZConfigUtils.sol";
 
 interface IOAppCore {
     function setPeer(uint32 peerEid, bytes32 peer) external;
 }
 
-contract DeployConfig is Script {
+contract DeployConfig is Script, LZConfigUtils {
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
 
@@ -30,38 +32,22 @@ contract DeployConfig is Script {
 
         vm.startBroadcast(pk);
 
-        // Libraries for adapter on ETH
-        ILayerZeroEndpointV2(ETH_ENDPOINT).setSendLibrary(ETH_ADAPTER, BASE_EID, ETH_SEND_LIB);
-        ILayerZeroEndpointV2(ETH_ENDPOINT).setReceiveLibrary(ETH_ADAPTER, ETH_EID, ETH_RECEIVE_LIB, 0);
+        // Libraries for adapter on ETH (send to Base, receive on ETH)
+        _setLibraries(ETH_ENDPOINT, ETH_ADAPTER, BASE_EID, ETH_EID, ETH_SEND_LIB, ETH_RECEIVE_LIB);
+
+        // Receive config (ULN) on ETH to accept from Base
+        _configureReceive(ETH_ENDPOINT, ETH_ADAPTER, BASE_EID, ETH_RECEIVE_LIB, 15);
 
         // Peer mapping adapter -> oft
-        IOAppCore(ETH_ADAPTER).setPeer(BASE_EID, bytes32(uint256(uint160(BASE_OFT))));
+        _setPeer(ETH_ADAPTER, BASE_EID, BASE_OFT);
 
-        // Send config (ULN + Executor)
-        _configureSend(ETH_ENDPOINT, ETH_ADAPTER, BASE_EID, ETH_SEND_LIB);
+        // Send config (ULN + Executor) on ETH to send to Base
+        _configureSend(ETH_ENDPOINT, ETH_ADAPTER, BASE_EID, ETH_SEND_LIB, 15);
+
+        // Set enforced options (ETH -> Base) with 80000 gas
+        _setEnforcedOptions(ETH_ADAPTER, BASE_EID);
 
         vm.stopBroadcast();
-        console2.log("ETH config complete: adapter libraries, peer, and send config set");
-    }
-
-    function _configureSend(address endpoint, address oapp, uint32 dstEid, address sendLib) internal {
-        console2.log("  - Setting Send Config (ULN + Executor)...");
-        address[] memory requiredDVNs = new address[](2);
-        requiredDVNs[0] = address(0x187cF227F81c287303ee765eE001e151347FAaA2);
-        requiredDVNs[1] = address(0x9e059a54699a285714207b43B055483E78FAac25);
-        UlnConfig memory uln = UlnConfig({
-            confirmations: 15,
-            requiredDVNCount: 2,
-            optionalDVNCount: type(uint8).max,
-            optionalDVNThreshold: 0,
-            requiredDVNs: requiredDVNs,
-            optionalDVNs: new address[](0)
-        });
-        ExecutorConfig memory exec =
-            ExecutorConfig({maxMessageSize: 10_000, executor: address(0x2CCA08ae69E0C44b18a57Ab2A87644234dAebaE4)});
-        SetConfigParam[] memory params = new SetConfigParam[](2);
-        params[0] = SetConfigParam(dstEid, 1, abi.encode(exec));
-        params[1] = SetConfigParam(dstEid, 2, abi.encode(uln));
-        ILayerZeroEndpointV2(endpoint).setConfig(oapp, sendLib, params);
+        console2.log("ETH config complete: adapter libraries, peer, send/receive configs, and enforced options set");
     }
 }

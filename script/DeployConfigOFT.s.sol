@@ -7,12 +7,15 @@ import {console2} from "forge-std/console2.sol";
 import {ILayerZeroEndpointV2} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
 import {SetConfigParam} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol";
 import {UlnConfig} from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/UlnBase.sol";
+import {ExecutorConfig} from "@layerzerolabs/lz-evm-messagelib-v2/contracts/SendLibBase.sol";
+import {IOAppOptionsType3} from "@layerzerolabs/oapp-evm/contracts/oapp/interfaces/IOAppOptionsType3.sol";
+import {LZConfigUtils} from "./utils/LZConfigUtils.sol";
 
 interface IOAppCore {
     function setPeer(uint32 peerEid, bytes32 peer) external;
 }
 
-contract DeployConfigOFT is Script {
+contract DeployConfigOFT is Script, LZConfigUtils {
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
 
@@ -30,34 +33,21 @@ contract DeployConfigOFT is Script {
         vm.startBroadcast(pk);
 
         // Libraries for OFT on Base
-        ILayerZeroEndpointV2(BASE_ENDPOINT).setSendLibrary(BASE_OFT, ETH_EID, BASE_SEND_LIB);
-        ILayerZeroEndpointV2(BASE_ENDPOINT).setReceiveLibrary(BASE_OFT, BASE_EID, BASE_RECEIVE_LIB, 0);
+        _setLibraries(BASE_ENDPOINT, BASE_OFT, ETH_EID, BASE_EID, BASE_SEND_LIB, BASE_RECEIVE_LIB);
 
         // Peer mapping oft -> adapter
         IOAppCore(BASE_OFT).setPeer(ETH_EID, bytes32(uint256(uint160(ETH_ADAPTER))));
 
         // Receive config (ULN) on Base to accept from ETH
-        _configureReceive(BASE_ENDPOINT, BASE_OFT, ETH_EID, BASE_RECEIVE_LIB);
+        _configureReceive(BASE_ENDPOINT, BASE_OFT, ETH_EID, BASE_RECEIVE_LIB, 10);
+
+        // Send config (ULN + Executor) on Base to send to ETH
+        _configureSend(BASE_ENDPOINT, BASE_OFT, ETH_EID, BASE_SEND_LIB, 10);
+
+        // Set enforced options (BASE -> ETH) with 80000 gas
+        _setEnforcedOptions(BASE_OFT, ETH_EID);
 
         vm.stopBroadcast();
-        console2.log("Base config complete: oft libraries, peer, and receive config set");
-    }
-
-    function _configureReceive(address endpoint, address oapp, uint32 srcEid, address receiveLib) internal {
-        console2.log("  - Setting Receive Config (ULN)...");
-        address[] memory requiredDVNs = new address[](2);
-        requiredDVNs[0] = address(0x187cF227F81c287303ee765eE001e151347FAaA2);
-        requiredDVNs[1] = address(0x9e059a54699a285714207b43B055483E78FAac25);
-        UlnConfig memory uln = UlnConfig({
-            confirmations: 15,
-            requiredDVNCount: 2,
-            optionalDVNCount: type(uint8).max,
-            optionalDVNThreshold: 0,
-            requiredDVNs: requiredDVNs,
-            optionalDVNs: new address[](0)
-        });
-        SetConfigParam[] memory params = new SetConfigParam[](1);
-        params[0] = SetConfigParam(srcEid, 2, abi.encode(uln));
-        ILayerZeroEndpointV2(endpoint).setConfig(oapp, receiveLib, params);
+        console2.log("Base config complete: oft libraries, peer, receive config, send config, and enforced options set");
     }
 }

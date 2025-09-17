@@ -22,6 +22,19 @@ contract KRWTCustodianWithOracle is KRWTCustodian {
     /// @notice The last saved oracle price
     uint256 public lastSavedOraclePrice;
 
+    /// @notice Mapping of addresses that are whitelisted for mint/redeem operations
+    mapping(address => bool) public whitelist;
+
+    /// @notice Flag that allows anyone to mint/redeem when set to true
+    bool public isPublic = false;
+
+    // ERRORS
+    // ===================================================
+
+    /// @notice Reverts when an address is not whitelisted and public access is disabled
+    /// @param account The address that attempted the operation
+    error NotWhitelisted(address account);
+
     /// @notice Constructor
     /// @param _krwt The address of the KRWT token
     /// @param _custodianTkn The address of the custodian token
@@ -30,6 +43,13 @@ contract KRWTCustodianWithOracle is KRWTCustodian {
     modifier updateOracle() {
         lastSavedOraclePrice = getCustodianOraclePrice();
         lastOracleUpdate = block.number;
+        _;
+    }
+
+    modifier onlyWhitelistedOrPublic() {
+        if (!isPublic && !whitelist[msg.sender]) {
+            revert NotWhitelisted(msg.sender);
+        }
         _;
     }
 
@@ -80,8 +100,14 @@ contract KRWTCustodianWithOracle is KRWTCustodian {
     /// @param _receiver Recipient of the minted shares
     /// @return _assetsIn Amount of assets used to generate the shares
     /// @dev See {IERC4626-mint}
-    /// @dev Override with updateOracle modifier
-    function mint(uint256 _sharesOut, address _receiver) public override updateOracle returns (uint256 _assetsIn) {
+    /// @dev Override with updateOracle and whitelist modifiers
+    function mint(uint256 _sharesOut, address _receiver)
+        public
+        override
+        updateOracle
+        onlyWhitelistedOrPublic
+        returns (uint256 _assetsIn)
+    {
         _assetsIn = super.mint(_sharesOut, _receiver);
     }
 
@@ -107,11 +133,12 @@ contract KRWTCustodianWithOracle is KRWTCustodian {
     /// @param _owner Owner of the shares being redeemed. Must be msg.sender.
     /// @return _assetsOut Amount of underlying tokens out
     /// @dev See {IERC4626-redeem}. Leaving _owner param for ABI compatibility
-    /// @dev Override with updateOracle modifier
+    /// @dev Override with updateOracle and whitelist modifiers
     function redeem(uint256 _sharesIn, address _receiver, address _owner)
         public
         override
         updateOracle
+        onlyWhitelistedOrPublic
         returns (uint256 _assetsOut)
     {
         _assetsOut = super.redeem(_sharesIn, _receiver, _owner);
@@ -160,6 +187,49 @@ contract KRWTCustodianWithOracle is KRWTCustodian {
         );
     }
 
-    /// @dev Reverts if the oracle has an error
+    /// @notice Add an address to the whitelist
+    /// @param _address The address to add to the whitelist
+    function addToWhitelist(address _address) external onlyOwner {
+        whitelist[_address] = true;
+        emit WhitelistUpdated(_address, true);
+    }
+
+    /// @notice Remove an address from the whitelist
+    /// @param _address The address to remove from the whitelist
+    function removeFromWhitelist(address _address) external onlyOwner {
+        whitelist[_address] = false;
+        emit WhitelistUpdated(_address, false);
+    }
+
+    /// @notice Set the public flag to allow anyone to mint/redeem
+    /// @param _isPublic True to allow anyone, false to restrict to whitelist
+    function setPublic(bool _isPublic) external onlyOwner {
+        isPublic = _isPublic;
+        emit PublicFlagUpdated(_isPublic);
+    }
+
+    /// @notice Check if an address is whitelisted or if public access is enabled
+    /// @param _address The address to check
+    /// @return True if the address can mint/redeem
+    function canMintRedeem(address _address) external view returns (bool) {
+        return isPublic || whitelist[_address];
+    }
+
+    // EVENTS
+    // ===================================================
+
+    /// @notice Emitted when an address is added or removed from the whitelist
+    /// @param account The address that was updated
+    /// @param isWhitelisted Whether the address is now whitelisted
+    event WhitelistUpdated(address indexed account, bool isWhitelisted);
+
+    /// @notice Emitted when the public flag is updated
+    /// @param isPublic Whether public access is now enabled
+    event PublicFlagUpdated(bool isPublic);
+
+    // ERRORS
+    // ===================================================
+
+    /// @notice Reverts if the oracle has an error
     error OracleError();
 }

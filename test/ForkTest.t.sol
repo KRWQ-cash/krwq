@@ -250,6 +250,11 @@ contract ForkTest is Test {
         // First mint some KRWT
         testMintKRWTWithUSDC();
 
+        // Set public flag to allow redemption
+        vm.startPrank(owner);
+        custodian.setPublic(true);
+        vm.stopPrank();
+
         console.log("\n=== Testing KRWT Redemption for USDC ===");
 
         // Get initial balances
@@ -314,6 +319,11 @@ contract ForkTest is Test {
     function testMultipleDepositsAndRedemptions() public skipFork {
         // Deploy and setup
         testSetMinter();
+
+        // Set public flag to allow anyone to mint/redeem
+        vm.startPrank(owner);
+        custodian.setPublic(true);
+        vm.stopPrank();
 
         console.log("\n=== Testing Multiple Deposits and Redemptions ===");
 

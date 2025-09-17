@@ -10,8 +10,7 @@ import {
     IOAppOptionsType3,
     EnforcedOptionParam
 } from "@layerzerolabs/oapp-evm/contracts/oapp/interfaces/IOAppOptionsType3.sol";
-import { OptionsBuilder } from "@layerzerolabs/oapp-evm/contracts/oapp/libs/OptionsBuilder.sol";
-
+import {OptionsBuilder} from "@layerzerolabs/oapp-evm/contracts/oapp/libs/OptionsBuilder.sol";
 
 interface IOAppCore {
     function setPeer(uint32 peerEid, bytes32 peer) external;
@@ -73,10 +72,10 @@ abstract contract LZConfigUtils {
     }
 
     function _setEnforcedOptions(address oapp, uint32 eid) internal {
-         // Encode LZ_RECEIVE with 80000 gas for msgType 1
+        // Encode LZ_RECEIVE with 80000 gas for msgType 1
         bytes memory options = OptionsBuilder.newOptions().addExecutorLzReceiveOption(80_000, 0);
         EnforcedOptionParam[] memory params = new EnforcedOptionParam[](1);
-        params[0] = EnforcedOptionParam({ eid: eid, msgType: 1, options: options });
+        params[0] = EnforcedOptionParam({eid: eid, msgType: 1, options: options});
         IOAppOptionsType3(oapp).setEnforcedOptions(params);
     }
 }

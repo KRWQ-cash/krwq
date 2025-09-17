@@ -17,30 +17,9 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Debug directory structure
-        run: |
-          pwd
-          ls -la
-          echo "Checking for lib directory:"
-          ls -la lib/ || echo "lib directory not found"
-          echo "Checking for node_modules directory:"
-          ls -la node_modules/ || echo "node_modules directory not found"
-
       - name: Initialize and update submodules
         run: |
-          echo "Before submodule init - checking lib directory:"
-          ls -la lib/ || echo "lib directory not found"
-          echo "Checking submodule status:"
-          git submodule status || echo "No submodules found"
-          
-          echo "Initializing submodules:"
           git submodule update --init --recursive --force
-          
-          echo "After submodule init - checking lib directory:"
-          ls -la lib/ || echo "lib directory still not found"
-          echo "Checking if submodules have content:"
-          ls -la lib/forge-std/ || echo "forge-std directory not found"
-          ls -la lib/openzeppelin-contracts/ || echo "openzeppelin-contracts directory not found"
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -57,31 +36,12 @@ jobs:
 
       - name: Install Foundry dependencies
         run: |
-          echo "Installing Foundry dependencies with forge install:"
           forge install foundry-rs/forge-std
           forge install OpenZeppelin/openzeppelin-contracts
-          
-          echo "Verifying forge install worked:"
-          ls -la lib/forge-std/ || echo "forge-std still not found after forge install"
-          ls -la lib/openzeppelin-contracts/ || echo "openzeppelin-contracts still not found after forge install"
-
-      - name: Verify dependencies installation
-        run: |
-          echo "Checking lib directory after forge install:"
-          ls -la lib/ || echo "lib directory still not found"
-          echo "Checking node_modules directory after npm ci:"
-          ls -la node_modules/ || echo "node_modules directory still not found"
-          echo "Checking for specific dependencies:"
-          ls -la lib/forge-std/ || echo "forge-std not found"
-          ls -la lib/openzeppelin-contracts/ || echo "openzeppelin-contracts not found"
 
       - name: Show Forge version
         run: |
           forge --version
-
-      - name: Verify remappings
-        run: |
-          forge remappings
 
       - name: Run Forge fmt
         run: |

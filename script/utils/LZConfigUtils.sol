@@ -17,6 +17,8 @@ interface IOAppCore {
 }
 
 abstract contract LZConfigUtils {
+    using OptionsBuilder for bytes;
+
     function _setLibraries(
         address endpoint,
         address oapp,

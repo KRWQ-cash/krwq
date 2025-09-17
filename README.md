@@ -163,6 +163,109 @@ forge script script/DeployKRWT.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_K
 forge script script/DeployKRWT.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast --verify --slow
 ```
 
+### Chain Deployment (in order)
+
+The OFT token is deployed on Base, while KRWT, the Custodian, and the OFT Adapter are deployed on Ethereum.
+
+1) Base: deploy OFT (KRWTOFT)
+
+```bash
+# Required env
+export PRIVATE_KEY=<deployer_pk_hex_no_0x>
+export TOKEN_NAME="Korean Won Token"
+export TOKEN_SYMBOL="KRWT"
+export LZ_ENDPOINT_BASE=<base_lz_endpoint_address>
+export OWNER_BASE=<final_owner_address_on_base>
+
+# Deploy on Base
+forge script script/DeployOFT.s.sol \
+  --rpc-url $BASE_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast --verify
+# Note the KRWTOFT proxy address from logs as BASE_OFT
+```
+
+2) Ethereum: deploy KRWT, Custodian with Oracle, and OFT Adapter
+
+Use the orchestrator to deploy and wire everything on Ethereum in one go.
+
+```bash
+# Required env
+export PRIVATE_KEY=<deployer_pk_hex_no_0x>
+export OWNER_ETH=<final_owner_address_on_eth>
+export TOKEN_NAME="Korean Won Token"
+export TOKEN_SYMBOL="KRWT"
+export CUSTODIAN_TOKEN_ADDRESS=<underlying_custodian_asset>
+export CUSTODIAN_ORACLE_ADDRESS=<chainlink_oracle_address>
+export MAX_ORACLE_DELAY=<seconds>
+export MINT_CAP=<uint256_cap>
+export MINT_FEE=<bps>
+export REDEEM_FEE=<bps>
+export LZ_ENDPOINT=<ethereum_lz_endpoint_address>
+
+# Deploy on Ethereum
+forge script script/DeployAll.s.sol \
+  --rpc-url $ETH_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast --verify
+# Note from logs:
+#  - KRWT Proxy -> KRWT proxy address (KRWT_ADDRESS)
+#  - Custodian Proxy -> custodian proxy address
+#  - OFTAdapter Proxy -> adapter proxy address (ETH_ADAPTER)
+```
+
+3) Configure LayerZero: Ethereum side (adapter)
+
+```bash
+# Required env
+export PRIVATE_KEY=<deployer_pk_hex_no_0x>
+export LZ_ENDPOINT=$LZ_ENDPOINT
+export ETH_EID=<ethereum_endpoint_id>
+export BASE_EID=<base_endpoint_id>
+export ETH_SEND_LIB=<eth_send_lib_address>
+export ETH_RECEIVE_LIB=<eth_receive_lib_address>
+export ETH_ADAPTER=<adapter_proxy_from_step_2>
+export BASE_OFT=<oft_proxy_from_step_1>
+
+forge script script/DeployConfig.s.sol \
+  --rpc-url $ETH_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast
+```
+
+4) Configure LayerZero: Base side (oft)
+
+```bash
+# Required env
+export PRIVATE_KEY=<deployer_pk_hex_no_0x>
+export LZ_ENDPOINT_BASE=$LZ_ENDPOINT_BASE
+export BASE_EID=<base_endpoint_id>
+export ETH_EID=<ethereum_endpoint_id>
+export BASE_SEND_LIB=<base_send_lib_address>
+export BASE_RECEIVE_LIB=<base_receive_lib_address>
+export BASE_OFT=<oft_proxy_from_step_1>
+export ETH_ADAPTER=<adapter_proxy_from_step_2>
+
+forge script script/DeployConfigOFT.s.sol \
+  --rpc-url $BASE_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast
+```
+
+5) Post-deploy ownership checks
+
+- DeployAll already initiates ownership transfer of `KRWT` and the `Custodian` to `OWNER_ETH`.
+- On Base, transfer `KRWTOFT` ownership to `OWNER_BASE` if desired:
+
+```bash
+cast send <BASE_OFT> "transferOwnership(address)" $OWNER_BASE \
+  --rpc-url $BASE_RPC_URL --private-key $PRIVATE_KEY
+```
+
+6) Verify (optional)
+
+Pass `--verify` in the commands above and ensure `ETHERSCAN_API_KEY` (and Base explorer API key if applicable) are set in your environment.
+
 ## 💡 Key Features
 
 ### 🪙 Token Features

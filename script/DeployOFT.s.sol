@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// @version 0.2.8
 pragma solidity ^0.8.24;
 
 import {Script} from "forge-std/Script.sol";
@@ -14,15 +15,17 @@ import {KRWTOFT} from "../src/bridge/KRWTOFT.sol";
 /// - PRIVATE_KEY: uint (hex without 0x)
 /// - TOKEN_NAME: string
 /// - TOKEN_SYMBOL: string
-/// - LZ_ENDPOINT: address
+/// - LZ_ENDPOINT_BASE: address
 /// - OWNER: address (delegate + ProxyAdmin owner)
 contract DeployOFT is Script {
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
+        address deployer = vm.addr(pk);
+
         string memory name = vm.envString("TOKEN_NAME");
         string memory symbol = vm.envString("TOKEN_SYMBOL");
-        address lzEndpoint = vm.envAddress("LZ_ENDPOINT");
-        address owner = vm.envAddress("OWNER");
+        address lzEndpoint = vm.envAddress("LZ_ENDPOINT_BASE");
+        address owner = vm.envAddress("OWNER_BASE");
 
         vm.startBroadcast(pk);
 
@@ -39,7 +42,7 @@ contract DeployOFT is Script {
             KRWTOFT.initialize.selector,
             name,
             symbol,
-            owner // delegate and Ownable owner
+            deployer // delegate and Ownable owner
         );
 
         // 4) Transparent proxy

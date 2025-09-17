@@ -17,6 +17,21 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Debug directory structure
+        run: |
+          pwd
+          ls -la
+          echo "Checking for lib directory:"
+          ls -la lib/ || echo "lib directory not found"
+          echo "Checking for node_modules directory:"
+          ls -la node_modules/ || echo "node_modules directory not found"
+
+      - name: Initialize and update submodules
+        run: |
+          git submodule update --init --recursive
+          echo "Submodules initialized. Checking lib directory:"
+          ls -la lib/ || echo "lib directory still not found"
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
@@ -33,6 +48,16 @@ jobs:
       - name: Install Foundry dependencies
         run: |
           forge install
+
+      - name: Verify dependencies installation
+        run: |
+          echo "Checking lib directory after forge install:"
+          ls -la lib/ || echo "lib directory still not found"
+          echo "Checking node_modules directory after npm ci:"
+          ls -la node_modules/ || echo "node_modules directory still not found"
+          echo "Checking for specific dependencies:"
+          ls -la lib/forge-std/ || echo "forge-std not found"
+          ls -la lib/openzeppelin-contracts/ || echo "openzeppelin-contracts not found"
 
       - name: Show Forge version
         run: |

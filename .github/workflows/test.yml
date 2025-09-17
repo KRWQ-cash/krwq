@@ -58,8 +58,8 @@ jobs:
       - name: Install Foundry dependencies
         run: |
           echo "Installing Foundry dependencies with forge install:"
-          forge install foundry-rs/forge-std --no-commit
-          forge install OpenZeppelin/openzeppelin-contracts --no-commit
+          forge install foundry-rs/forge-std
+          forge install OpenZeppelin/openzeppelin-contracts
           
           echo "Verifying forge install worked:"
           ls -la lib/forge-std/ || echo "forge-std still not found after forge install"

@@ -201,7 +201,7 @@ export OWNER_BASE=<final_owner_address_on_base>
 forge script script/DeployOFT.s.sol \
   --rpc-url $BASE_RPC_URL \
   --private-key $PRIVATE_KEY \
-  --broadcast --verify
+  --broadcast --verify -vvvv
 # Note the KRWTOFT proxy address from logs as BASE_OFT
 ```
 
@@ -227,7 +227,7 @@ export LZ_ENDPOINT=<ethereum_lz_endpoint_address>
 forge script script/DeployAll.s.sol \
   --rpc-url $ETH_RPC_URL \
   --private-key $PRIVATE_KEY \
-  --broadcast --verify
+  --broadcast --verify -vvvv
 # Note from logs:
 #  - KRWT Proxy -> KRWT proxy address (KRWT_ADDRESS)
 #  - Custodian Proxy -> custodian proxy address
@@ -250,7 +250,7 @@ export BASE_OFT=<oft_proxy_from_step_1>
 forge script script/DeployConfig.s.sol \
   --rpc-url $ETH_RPC_URL \
   --private-key $PRIVATE_KEY \
-  --broadcast
+  --broadcast -vvvv
 ```
 
 4) Configure LayerZero: Base side (oft)
@@ -269,7 +269,7 @@ export ETH_ADAPTER=<adapter_proxy_from_step_2>
 forge script script/DeployConfigOFT.s.sol \
   --rpc-url $BASE_RPC_URL \
   --private-key $PRIVATE_KEY \
-  --broadcast
+  --broadcast -vvvv
 ```
 
 5) Transfer ownership and delegates (optional)
@@ -288,7 +288,7 @@ export OWNER_ETH=<final_owner_address_on_eth>
 forge script script/TransferOwnershipETH.s.sol \
   --rpc-url $ETH_RPC_URL \
   --private-key $PRIVATE_KEY \
-  --broadcast
+  --broadcast -vvvv
 ```
 
 **Base side (OFT):**
@@ -303,7 +303,7 @@ export OWNER_BASE=<final_owner_address_on_base>
 forge script script/TransferOwnershipBase.s.sol \
   --rpc-url $BASE_RPC_URL \
   --private-key $PRIVATE_KEY \
-  --broadcast
+  --broadcast -vvvv
 ```
 
 **Note:** These scripts will transfer both ownership and delegate control to the same address (`OWNER_ETH`/`OWNER_BASE`). If you only need to transfer ownership, you can use individual `cast` commands:

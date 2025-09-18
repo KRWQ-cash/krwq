@@ -31,13 +31,13 @@ contract DeployConfig is Script, LZConfigUtils {
         _setLibraries(ethEndpoint, ethAdapter, baseEid, ethEid, ethSendLib, ethReceiveLib);
 
         // Receive config (ULN) on ETH to accept from Base - use Ethereum DVNs
-        _configureReceive(ethEndpoint, ethAdapter, baseEid, ethReceiveLib, 15, true);
+        _configureReceive(ethEndpoint, ethAdapter, baseEid, ethReceiveLib, 10, true);
 
         // Peer mapping adapter -> oft
         _setPeer(ethAdapter, baseEid, baseOft);
 
         // Send config (ULN + Executor) on ETH to send to Base - use Base DVNs
-        _configureSend(ethEndpoint, ethAdapter, baseEid, ethSendLib, 15, false);
+        _configureSend(ethEndpoint, ethAdapter, baseEid, ethSendLib, 15, true);
 
         // Set enforced options (ETH -> Base) with 80000 gas
         _setEnforcedOptions(ethAdapter, baseEid);

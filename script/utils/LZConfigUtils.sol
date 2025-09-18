@@ -77,14 +77,14 @@ abstract contract LZConfigUtils {
         address[] memory requiredDvns = new address[](3);
 
         if (isEthereum) {
-            // Use Ethereum DVN addresses
-            requiredDvns[0] = 0xa4fE5A5B9A846458a70Cd0748228aED3bF65c2cd; // canary
+            // Use Ethereum DVN addresses (sorted ascending by hex)
+            requiredDvns[0] = 0x373a6E5c0C4E89E24819f00AA37ea370917AAfF4; // Deutsche Telekom
             requiredDvns[1] = 0x38654142F5E672Ae86a1b21523AAfC765E6A1e08; // frax
-            requiredDvns[2] = 0x373a6E5c0C4E89E24819f00AA37ea370917AAfF4; // Deutsche Telekom
+            requiredDvns[2] = 0xa4fE5A5B9A846458a70Cd0748228aED3bF65c2cd; // canary
         } else {
-            // Use Base DVN addresses
-            requiredDvns[0] = 0x554833698Ae0FB22ECC90B01222903fD62CA4B47; // canary base
-            requiredDvns[1] = 0x187cF227F81c287303ee765eE001e151347FAaA2; // frax base
+            // Use Base DVN addresses (sorted ascending by hex)
+            requiredDvns[0] = 0x187cF227F81c287303ee765eE001e151347FAaA2; // frax base
+            requiredDvns[1] = 0x554833698Ae0FB22ECC90B01222903fD62CA4B47; // canary base
             requiredDvns[2] = 0xc2A0C36f5939A14966705c7Cec813163FaEEa1F0; // Deutsche Telekom base
         }
 

@@ -34,10 +34,10 @@ contract DeployConfigOFT is Script, LZConfigUtils {
         IOAppCore(baseOft).setPeer(ethEid, bytes32(uint256(uint160(ethAdapter))));
 
         // Receive config (ULN) on Base to accept from ETH - use Base DVNs
-        _configureReceive(baseEndpoint, baseOft, ethEid, baseReceiveLib, 10, false);
+        _configureReceive(baseEndpoint, baseOft, ethEid, baseReceiveLib, 15, false);
 
         // Send config (ULN + Executor) on Base to send to ETH - use Ethereum DVNs
-        _configureSend(baseEndpoint, baseOft, ethEid, baseSendLib, 10, true);
+        _configureSend(baseEndpoint, baseOft, ethEid, baseSendLib, 10, false);
 
         // Set enforced options (BASE -> ETH) with 80000 gas
         _setEnforcedOptions(baseOft, ethEid);

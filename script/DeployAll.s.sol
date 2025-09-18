@@ -11,7 +11,7 @@ import {DeployOFTAdapter} from "./DeployOFTAdapter.s.sol";
 import {KRWT} from "../src/KRWT.sol";
 
 interface IWhitelistOwnable {
-    function addToWhitelist(address _address) external;
+    function setWhitelistStatus(address _address, bool _isWhitelisted) external;
     function transferOwnership(address newOwner) external;
 }
 
@@ -66,7 +66,8 @@ contract DeployAll is Script {
 
         // 4) Whitelist OWNER_ETH in the custodian (onlyOwner = deployer right now)
         //    This allows the final owner to interact when public is false
-        IWhitelistOwnable(custProxy).addToWhitelist(owner);
+        IWhitelistOwnable(custProxy).setWhitelistStatus(owner, true);
+        IWhitelistOwnable(custProxy).setWhitelistStatus(deployer, true);
         console.log("Whitelisted OWNER_ETH in custodian");
 
         // 5) Deploy OFTAdapter (admin owner = OWNER_ETH, delegate = deployer)

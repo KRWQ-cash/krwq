@@ -66,7 +66,7 @@ abstract contract LZConfigUtils {
         bool isEthereum
     ) internal {
         UlnConfig memory uln = _buildUlnConfig(confirmations, isEthereum);
-        ExecutorConfig memory exec = _buildExecutorConfig();
+        ExecutorConfig memory exec = _buildExecutorConfig(isEthereum);
         SetConfigParam[] memory params = new SetConfigParam[](2);
         params[0] = SetConfigParam(dstEid, CONFIG_TYPE_EXECUTOR, abi.encode(exec));
         params[1] = SetConfigParam(dstEid, CONFIG_TYPE_ULN, abi.encode(uln));
@@ -98,8 +98,12 @@ abstract contract LZConfigUtils {
         });
     }
 
-    function _buildExecutorConfig() internal pure returns (ExecutorConfig memory exec) {
-        exec = ExecutorConfig({maxMessageSize: 10_000, executor: address(0x2CCA08ae69E0C44b18a57Ab2A87644234dAebaE4)});
+    function _buildExecutorConfig(bool isEthereum) internal pure returns (ExecutorConfig memory exec) {
+        // Ethereum uses its own executor; others (e.g., Base) keep existing executor
+        address executorAddress = isEthereum
+            ? address(0x173272739Bd7Aa6e4e214714048a9fE699453059)
+            : address(0x2CCA08ae69E0C44b18a57Ab2A87644234dAebaE4);
+        exec = ExecutorConfig({maxMessageSize: 10_000, executor: executorAddress});
     }
 
     function _setEnforcedOptions(address oapp, uint32 eid) internal {

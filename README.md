@@ -27,7 +27,7 @@ The KRWT ecosystem consists of multiple interconnected contracts that provide:
 - **ERC20Burnable**: Ability to burn tokens
 - **Ownable2Step**: Two-step ownership transfer for enhanced security
 - **Minter Management**: Owner-controlled list of authorized minters
-- **Proxy Support**: Upgradeable via TransparentUpgradeableProxy
+- **Proxy Support**: Upgradeable via TransparentUpgradeableProxy (admin is the final owner; no ProxyAdmin)
 - **Initialization**: Supports both constructor and initialize() for proxy deployment
 - **Storage Slots**: Uses OpenZeppelin StorageSlot for proxy compatibility
 
@@ -195,7 +195,7 @@ export PRIVATE_KEY=<deployer_pk_hex_no_0x>
 export TOKEN_NAME="Korean Won Token"
 export TOKEN_SYMBOL="KRWT"
 export LZ_ENDPOINT_BASE=<base_lz_endpoint_address>
-export OWNER_BASE=<final_owner_address_on_base>
+export OWNER_BASE=<final_owner_address_on_base> # also acts as proxy admin
 
 # Deploy on Base
 forge script script/DeployOFT.s.sol \
@@ -212,7 +212,7 @@ Use the orchestrator to deploy and wire everything on Ethereum in one go.
 ```bash
 # Required env
 export PRIVATE_KEY=<deployer_pk_hex_no_0x>
-export OWNER_ETH=<final_owner_address_on_eth>
+export OWNER_ETH=<final_owner_address_on_eth> # also acts as proxy admin
 export TOKEN_NAME="Korean Won Token"
 export TOKEN_SYMBOL="KRWT"
 export CUSTODIAN_TOKEN_ADDRESS=<underlying_custodian_asset>

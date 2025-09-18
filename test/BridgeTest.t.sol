@@ -3,11 +3,11 @@ pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 
-import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {
     TransparentUpgradeableProxy,
     ITransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
 import {KRWTOFT} from "../src/bridge/KRWTOFT.sol";
 import {KRWTOFTAdapter} from "../src/bridge/KRWTOFTAdapter.sol";
@@ -70,6 +70,10 @@ contract MockReceiveLib {
 
 /// @notice Test suite for bridge contracts (KRWTOFT and KRWTOFTAdapter)
 contract BridgeTest is Test {
+    // EIP-1967 slots
+    bytes32 private constant IMPLEMENTATION_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
+    bytes32 private constant ADMIN_SLOT = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+
     // Test accounts
     address public owner = makeAddr("owner");
     address public user1 = makeAddr("user1");
@@ -83,8 +87,6 @@ contract BridgeTest is Test {
     // Bridge contracts
     KRWTOFT public oftImpl;
     KRWTOFTAdapter public oftAdapterImpl;
-    ProxyAdmin public oftAdmin;
-    ProxyAdmin public oftAdapterAdmin;
     TransparentUpgradeableProxy public oftProxy;
     TransparentUpgradeableProxy public oftAdapterProxy;
 
@@ -117,18 +119,13 @@ contract BridgeTest is Test {
         oftImpl = new KRWTOFT(address(mockEndpoint));
         oftAdapterImpl = new KRWTOFTAdapter(address(krwtToken), address(mockEndpoint));
 
-        // Deploy proxy admins
-        oftAdmin = new ProxyAdmin(owner);
-        oftAdapterAdmin = new ProxyAdmin(owner);
-
         // Deploy and initialize KRWTOFT proxy
         bytes memory oftInitData = abi.encodeWithSelector(KRWTOFT.initialize.selector, TOKEN_NAME, TOKEN_SYMBOL, owner);
-        oftProxy = new TransparentUpgradeableProxy(address(oftImpl), address(oftAdmin), oftInitData);
+        oftProxy = new TransparentUpgradeableProxy(address(oftImpl), owner, oftInitData);
 
         // Deploy and initialize KRWTOFTAdapter proxy
         bytes memory oftAdapterInitData = abi.encodeWithSelector(KRWTOFTAdapter.initialize.selector, owner);
-        oftAdapterProxy =
-            new TransparentUpgradeableProxy(address(oftAdapterImpl), address(oftAdapterAdmin), oftAdapterInitData);
+        oftAdapterProxy = new TransparentUpgradeableProxy(address(oftAdapterImpl), owner, oftAdapterInitData);
 
         // Set up LayerZero libraries
         mockEndpoint.setSendLibrary(address(oftProxy), DST_EID, address(mockSendLib));
@@ -260,7 +257,6 @@ contract BridgeTest is Test {
     }
 
     // ============ Integration Tests ============
-
     function testBridge_QuoteFee() public {
         KRWTOFT oft = KRWTOFT(address(oftProxy));
 
@@ -376,25 +372,44 @@ contract BridgeTest is Test {
         vm.stopPrank();
     }
 
-    // ============ Proxy Admin Tests ============
+    // ============ Proxy Admin (Owner-as-Admin) Tests ============
 
-    // Note: Proxy upgrade test removed as it requires complex setup with proper initialization
-    // The ProxyAdmin functionality is tested through the access control test below
-
-    function testProxyAdmin_Upgrade_OnlyAdmin() public {
+    function testProxyUpgrade_OnlyOwnerCanUpgrade() public {
+        // prepare new implementation
         KRWTOFT newImpl = new KRWTOFT(address(mockEndpoint));
 
+        // fetch ProxyAdmin from admin slot
+        address adminAddr = address(uint160(uint256(vm.load(address(oftProxy), ADMIN_SLOT))));
+        ProxyAdmin pa = ProxyAdmin(adminAddr);
+
+        // non-owner cannot upgrade via ProxyAdmin
         vm.startPrank(user1);
         vm.expectRevert();
-        oftAdmin.upgradeAndCall(ITransparentUpgradeableProxy(address(oftProxy)), address(newImpl), "");
+        pa.upgradeAndCall(ITransparentUpgradeableProxy(address(oftProxy)), address(newImpl), "");
+        vm.stopPrank();
+
+        // owner upgrades successfully via ProxyAdmin
+        vm.startPrank(owner);
+        pa.upgradeAndCall(ITransparentUpgradeableProxy(address(oftProxy)), address(newImpl), "");
+        // verify implementation via EIP-1967 slot
+        bytes32 implSlotVal = vm.load(address(oftProxy), IMPLEMENTATION_SLOT);
+        address impl = address(uint160(uint256(implSlotVal)));
+        assertEq(impl, address(newImpl));
         vm.stopPrank();
     }
 
     function testProxyAdmin_TransferOwnership() public {
+        // fetch ProxyAdmin from admin slot
+        address adminAddr = address(uint160(uint256(vm.load(address(oftProxy), ADMIN_SLOT))));
+        ProxyAdmin pa = ProxyAdmin(adminAddr);
+
+        // owner transfers ProxyAdmin ownership to user1
         vm.startPrank(owner);
-        oftAdmin.transferOwnership(user1);
+        pa.transferOwnership(user1);
         vm.stopPrank();
 
-        assertEq(oftAdmin.owner(), user1);
+        assertEq(pa.owner(), user1);
     }
+
+    // ProxyAdmin tests removed as admin is now the owner directly on the proxy
 }

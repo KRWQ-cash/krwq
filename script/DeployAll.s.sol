@@ -30,7 +30,7 @@ contract DeployAll is Script {
             string memory name = vm.envString("TOKEN_NAME");
             string memory symbol = vm.envString("TOKEN_SYMBOL");
             DeployKRWT d = new DeployKRWT();
-            (,, krwtProxy) = d.deployKRWT(owner, deployer, name, symbol);
+            (, krwtProxy) = d.deployKRWT(owner, deployer, name, symbol);
             console.log("KRWT Proxy:", krwtProxy);
         }
 
@@ -46,8 +46,8 @@ contract DeployAll is Script {
 
             DeployKRWTCustodianWithOracle d = new DeployKRWTCustodianWithOracle();
             // Initialize custodian with deployer as owner so we can whitelist and wire, then hand over ownership to OWNER_ETH
-            (,, custProxy) = d.deployCustodianWithOracle(
-                owner, // ProxyAdmin owner
+            (, custProxy) = d.deployCustodianWithOracle(
+                owner, // owner
                 deployer, // delegate/temporary owner for custodian contract
                 krwtProxy,
                 custodianTkn,
@@ -75,7 +75,7 @@ contract DeployAll is Script {
         {
             address lzEndpoint = vm.envAddress("LZ_ENDPOINT");
             DeployOFTAdapter d = new DeployOFTAdapter();
-            (,, address oftAdapterProxy) = d.deployOFTAdapter(owner, deployer, krwtProxy, lzEndpoint);
+            (, address oftAdapterProxy) = d.deployOFTAdapter(owner, deployer, krwtProxy, lzEndpoint);
             console.log("OFTAdapter Proxy:", oftAdapterProxy);
         }
 

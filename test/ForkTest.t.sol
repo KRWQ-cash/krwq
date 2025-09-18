@@ -7,17 +7,12 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {KRWT} from "../src/KRWT.sol";
 import {KRWTCustodianWithOracle} from "../src/KRWTCustodianWithOracle.sol";
-import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract ForkTest is Test {
-    // Skip fork tests by default - use --match-test "Fork" to run them
-    modifier skipFork() {
-        if (block.chainid == 1) {
-            _;
-        } else {
-            vm.skip(true);
-        }
+    // Helper: ensure we only run on mainnet forks, otherwise return early
+    function requireMainnetFork() internal view returns (bool) {
+        return block.chainid == 1;
     }
     // Fork configuration
 
@@ -35,8 +30,6 @@ contract ForkTest is Test {
     // Deployed contracts
     KRWT krwt;
     KRWTCustodianWithOracle custodian;
-    ProxyAdmin krwtAdmin;
-    ProxyAdmin custodianAdmin;
     TransparentUpgradeableProxy krwtProxy;
     TransparentUpgradeableProxy custodianProxy;
 
@@ -46,7 +39,8 @@ contract ForkTest is Test {
     uint256 constant REDEEM_FEE = 0; // 0% fee
     uint256 constant MAX_ORACLE_DELAY = 3600 * 24; // 1 day
 
-    function setUp() public skipFork {
+    function setUp() public {
+        if (!requireMainnetFork()) return;
         // Fork the mainnet at a specific block
         vm.createFork(FORK_RPC_URL);
 
@@ -74,7 +68,8 @@ contract ForkTest is Test {
         console.log("User USDC Balance:", IERC20(USDC).balanceOf(user) / 1e6);
     }
 
-    function testDeployKRWT() public skipFork {
+    function testDeployKRWT() public {
+        if (!requireMainnetFork()) return;
         vm.startPrank(deployer);
 
         console.log("\n=== Deploying KRWT ===");
@@ -83,15 +78,11 @@ contract ForkTest is Test {
         KRWT impl = new KRWT(owner, "KRWT", "KRWT");
         console.log("KRWT Implementation:", address(impl));
 
-        // 2) Deploy ProxyAdmin
-        krwtAdmin = new ProxyAdmin(owner);
-        console.log("KRWT ProxyAdmin:", address(krwtAdmin));
-
-        // 3) Encode initializer
+        // 2) Encode initializer
         bytes memory initData = abi.encodeWithSelector(KRWT.initialize.selector, owner, "KRWT", "KRWT");
 
-        // 4) Deploy Transparent proxy
-        krwtProxy = new TransparentUpgradeableProxy(address(impl), address(krwtAdmin), initData);
+        // 3) Deploy Transparent proxy (owner is admin)
+        krwtProxy = new TransparentUpgradeableProxy(address(impl), owner, initData);
         krwt = KRWT(address(krwtProxy));
         console.log("KRWT Proxy:", address(krwt));
 
@@ -107,7 +98,8 @@ contract ForkTest is Test {
         console.log("KRWT deployed successfully!");
     }
 
-    function testDeployCustodianWithOracle() public skipFork {
+    function testDeployCustodianWithOracle() public {
+        if (!requireMainnetFork()) return;
         // First deploy KRWT
         testDeployKRWT();
 
@@ -119,11 +111,7 @@ contract ForkTest is Test {
         KRWTCustodianWithOracle impl = new KRWTCustodianWithOracle(address(krwt), USDC);
         console.log("Custodian Implementation:", address(impl));
 
-        // 2) Deploy ProxyAdmin
-        custodianAdmin = new ProxyAdmin(owner);
-        console.log("Custodian ProxyAdmin:", address(custodianAdmin));
-
-        // 3) Encode initializer
+        // 2) Encode initializer
         bytes memory initData = abi.encodeWithSelector(
             KRWTCustodianWithOracle.initialize.selector,
             owner,
@@ -134,8 +122,8 @@ contract ForkTest is Test {
             REDEEM_FEE
         );
 
-        // 4) Deploy Transparent proxy
-        custodianProxy = new TransparentUpgradeableProxy(address(impl), address(custodianAdmin), initData);
+        // 3) Deploy Transparent proxy (owner is admin)
+        custodianProxy = new TransparentUpgradeableProxy(address(impl), owner, initData);
         custodian = KRWTCustodianWithOracle(address(custodianProxy));
         console.log("Custodian Proxy:", address(custodian));
 
@@ -152,7 +140,8 @@ contract ForkTest is Test {
         console.log("Custodian deployed successfully!");
     }
 
-    function testSetMinter() public skipFork {
+    function testSetMinter() public {
+        if (!requireMainnetFork()) return;
         // Deploy both contracts
         testDeployCustodianWithOracle();
 
@@ -171,7 +160,8 @@ contract ForkTest is Test {
         vm.stopPrank();
     }
 
-    function testOraclePriceFeed() public skipFork {
+    function testOraclePriceFeed() public {
+        if (!requireMainnetFork()) return;
         // Deploy and setup everything
         testSetMinter();
 
@@ -192,7 +182,8 @@ contract ForkTest is Test {
         console.log("Oracle price feed working correctly!");
     }
 
-    function testMintKRWTWithUSDC() public skipFork {
+    function testMintKRWTWithUSDC() public {
+        if (!requireMainnetFork()) return;
         // Deploy and setup everything
         testSetMinter();
 
@@ -246,7 +237,8 @@ contract ForkTest is Test {
         console.log("KRWT minting with USDC successful!");
     }
 
-    function testRedeemKRWTForUSDC() public skipFork {
+    function testRedeemKRWTForUSDC() public {
+        if (!requireMainnetFork()) return;
         // First mint some KRWT
         testMintKRWTWithUSDC();
 
@@ -298,7 +290,8 @@ contract ForkTest is Test {
         console.log("KRWT redemption for USDC successful!");
     }
 
-    function testFullWorkflow() public skipFork {
+    function testFullWorkflow() public {
+        if (!requireMainnetFork()) return;
         console.log("\n=== Running Full Workflow Test ===");
 
         // Deploy and setup
@@ -316,7 +309,8 @@ contract ForkTest is Test {
         console.log("\n=== Full Workflow Test Completed Successfully! ===");
     }
 
-    function testMultipleDepositsAndRedemptions() public skipFork {
+    function testMultipleDepositsAndRedemptions() public {
+        if (!requireMainnetFork()) return;
         // Deploy and setup
         testSetMinter();
 

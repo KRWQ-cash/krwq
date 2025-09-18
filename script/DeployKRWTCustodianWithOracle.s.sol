@@ -4,15 +4,12 @@ pragma solidity ^0.8.24;
 
 import {Script} from "forge-std/Script.sol";
 import {console2 as console} from "forge-std/console2.sol";
-
-import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-
 import {KRWTCustodianWithOracle} from "../src/KRWTCustodianWithOracle.sol";
 
 contract DeployKRWTCustodianWithOracle is Script {
     /// @notice Deploy KRWTCustodianWithOracle behind a TransparentUpgradeableProxy
-    /// @param adminOwner ProxyAdmin owner
+    /// @param adminOwner Proxy owner
     /// @param delegateOwner Address passed as initializer first param (temporary owner/delegate)
     /// @param krwt Address of KRWT proxy/token
     /// @param custodianTkn Custodian token address
@@ -22,7 +19,6 @@ contract DeployKRWTCustodianWithOracle is Script {
     /// @param mintFee Fee
     /// @param redeemFee Fee
     /// @return impl Address of implementation
-    /// @return admin Address of ProxyAdmin
     /// @return proxy Address of TransparentUpgradeableProxy
     function deployCustodianWithOracle(
         address adminOwner,
@@ -34,9 +30,8 @@ contract DeployKRWTCustodianWithOracle is Script {
         uint256 mintCap,
         uint256 mintFee,
         uint256 redeemFee
-    ) external returns (address impl, address admin, address proxy) {
+    ) external returns (address impl, address proxy) {
         KRWTCustodianWithOracle _impl = new KRWTCustodianWithOracle(krwt, custodianTkn);
-        ProxyAdmin _admin = new ProxyAdmin(adminOwner);
         bytes memory initData = abi.encodeWithSelector(
             KRWTCustodianWithOracle.initialize.selector,
             delegateOwner,
@@ -46,8 +41,8 @@ contract DeployKRWTCustodianWithOracle is Script {
             mintFee,
             redeemFee
         );
-        TransparentUpgradeableProxy _proxy = new TransparentUpgradeableProxy(address(_impl), address(_admin), initData);
-        return (address(_impl), address(_admin), address(_proxy));
+        TransparentUpgradeableProxy _proxy = new TransparentUpgradeableProxy(address(_impl), adminOwner, initData);
+        return (address(_impl), address(_proxy));
     }
 
     function run() external {
@@ -67,11 +62,10 @@ contract DeployKRWTCustodianWithOracle is Script {
 
         vm.startBroadcast(pk);
 
-        (address impl, address admin, address proxy) = this.deployCustodianWithOracle(
+        (address impl, address proxy) = this.deployCustodianWithOracle(
             owner, deployer, krwt, custodianTkn, custodianOracle, maximumOracleDelay, mintCap, mintFee, redeemFee
         );
         console.log("Impl:", impl);
-        console.log("ProxyAdmin:", admin);
         console.log("Proxy:", proxy);
 
         vm.stopBroadcast();

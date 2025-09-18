@@ -1,0 +1,261 @@
+// SPDX-License-Identifier: MIT
+// @version 0.2.8
+pragma solidity ^0.8.24;
+
+/*
++--------------------------------------------------------------+
+|             $*                         *8*                   |
+|            88   $*                      "*8"  .              |
+|           88   88   $*               *8*     8 *,            |
+|          88   88   88                 "*8 *   "*8*           |
+|         88   88   88              *8 *   "*8 * ,             |
+|        *$   88   88                " *8" .  "*8*             |
+|            *$   88        .-888-.        8 * ,               |
+|                *$       .888red888.       "*8*               |
+|                        ,888888.*;;*.                         |
+|                        888888*;;;;;`                         |
+|                        888888*;;;;;j                         |
+|                        `*00*";;;;;.'                         |
+|               *8*       `;;;blue;;'        $*                |
+|                "*8 *      `-;;;-'         88   $*            |
+|             *8*   "*8 *,                 "*   88   $*        |
+|              "*8" .  "*8*               *.   "*   88         |
+|          *8 *     8 * ,                88   *.   "*          |
+|           " *8 *   "*8*               *$   88   *.           |
+|               "*8 * ,                     *$   88            |
+|                  "*8*                         *$       KRWT  |
++--------------------------------------------------------------+
+*/
+
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {KRWTCustodian} from "./KRWTCustodian.sol";
+import {AggregatorV3Interface} from "./interfaces/AggregatorV3Interface.sol";
+
+contract KRWTCustodianWithOracle is KRWTCustodian {
+    /// @notice The address of the custodian oracle
+    address public custodianOracle;
+
+    /// @notice The number of decimals of the custodian oracle
+    uint256 public oracleDecimals;
+
+    /// @notice The maximum delay allowed for the oracle
+    uint256 public maximumOracleDelay;
+
+    /// @notice The last oracle update block
+    uint256 public lastOracleUpdate;
+
+    /// @notice The last saved oracle price
+    uint256 public lastSavedOraclePrice;
+
+    /// @notice Mapping of addresses that are whitelisted for mint/redeem operations
+    mapping(address => bool) public whitelist;
+
+    /// @notice Flag that allows anyone to mint/redeem when set to true
+    bool public isPublic = false;
+
+    // ERRORS
+    // ===================================================
+
+    /// @notice Reverts when an address is not whitelisted and public access is disabled
+    /// @param account The address that attempted the operation
+    error NotWhitelisted(address account);
+
+    /// @notice Constructor
+    /// @param _krwt The address of the KRWT token
+    /// @param _custodianTkn The address of the custodian token
+    constructor(address _krwt, address _custodianTkn) KRWTCustodian(_krwt, _custodianTkn) {}
+
+    modifier updateOracle() {
+        lastSavedOraclePrice = getCustodianOraclePrice();
+        lastOracleUpdate = block.number;
+        _;
+    }
+
+    modifier onlyWhitelistedOrPublic() {
+        if (!isPublic && !whitelist[msg.sender]) {
+            revert NotWhitelisted(msg.sender);
+        }
+        _;
+    }
+
+    /**
+     * @notice Initialize contract, can only be called once
+     * @param _owner The owner of this contract
+     * @param _custodianOracle The address of the custodian oracle
+     * @param _maximumOracleDelay The maximum delay allowed for the oracle
+     * @param _mintCap The mint cap for KRWT minting
+     * @param _mintFee The mint fee
+     * @param _redeemFee The redeem fee
+     */
+    function initialize(
+        address _owner,
+        address _custodianOracle,
+        uint256 _maximumOracleDelay,
+        uint256 _mintCap,
+        uint256 _mintFee,
+        uint256 _redeemFee
+    ) public {
+        super.initialize(_owner, _mintCap, _mintFee, _redeemFee);
+        custodianOracle = _custodianOracle;
+        oracleDecimals = AggregatorV3Interface(_custodianOracle).decimals();
+        maximumOracleDelay = _maximumOracleDelay;
+    }
+
+    /// @dev Sets the custodian oracle
+    /// @param _custodianOracle The address of the custodian oracle
+    /// @param _maximumOracleDelay The maximum delay allowed for the oracle
+    function setCustodianOracle(address _custodianOracle, uint256 _maximumOracleDelay) external onlyOwner {
+        custodianOracle = _custodianOracle;
+        oracleDecimals = AggregatorV3Interface(_custodianOracle).decimals();
+        maximumOracleDelay = _maximumOracleDelay;
+    }
+
+    /// @notice Deposit a specified amount of underlying tokens and generate shares. Make sure to approve msg.sender's assets to this contract first.
+    /// @param _assetsIn Amount of underlying tokens you are depositing
+    /// @param _receiver Recipient of the generated shares
+    /// @return _sharesOut Amount of shares generated by the deposit
+    /// @dev See {IERC4626-deposit}
+    /// @notice Override with updateOracle modifier
+    function deposit(uint256 _assetsIn, address _receiver)
+        public
+        override
+        updateOracle
+        onlyWhitelistedOrPublic
+        returns (uint256 _sharesOut)
+    {
+        _sharesOut = super.deposit(_assetsIn, _receiver);
+    }
+
+    /// @notice Mint a specified amount of shares using underlying asset tokens. Make sure to approve msg.sender's assets to this contract first.
+    /// @param _sharesOut Amount of shares you want to mint
+    /// @param _receiver Recipient of the minted shares
+    /// @return _assetsIn Amount of assets used to generate the shares
+    /// @dev See {IERC4626-mint}
+    /// @dev Override with updateOracle and whitelist modifiers
+    function mint(uint256 _sharesOut, address _receiver)
+        public
+        override
+        updateOracle
+        onlyWhitelistedOrPublic
+        returns (uint256 _assetsIn)
+    {
+        _assetsIn = super.mint(_sharesOut, _receiver);
+    }
+
+    /// @notice Withdraw a specified amount of underlying tokens. Make sure to approve _owner's shares to this contract first
+    /// @param _assetsOut Amount of asset tokens you want to withdraw
+    /// @param _receiver Recipient of the asset tokens
+    /// @param _owner Owner of the shares. Must be msg.sender
+    /// @return _sharesIn Amount of shares used for the withdrawal
+    /// @dev See {IERC4626-withdraw}. Leaving _owner param for ABI compatibility
+    /// @dev Override with updateOracle modifier
+    function withdraw(uint256 _assetsOut, address _receiver, address _owner)
+        public
+        override
+        updateOracle
+        onlyWhitelistedOrPublic
+        returns (uint256 _sharesIn)
+    {
+        _sharesIn = super.withdraw(_assetsOut, _receiver, _owner);
+    }
+
+    /// @notice Redeem a specified amount of shares for the underlying tokens. Make sure to approve _owner's shares to this contract first.
+    /// @param _sharesIn Number of shares to redeem
+    /// @param _receiver Recipient of the underlying asset tokens
+    /// @param _owner Owner of the shares being redeemed. Must be msg.sender.
+    /// @return _assetsOut Amount of underlying tokens out
+    /// @dev See {IERC4626-redeem}. Leaving _owner param for ABI compatibility
+    /// @dev Override with updateOracle and whitelist modifiers
+    function redeem(uint256 _sharesIn, address _receiver, address _owner)
+        public
+        override
+        updateOracle
+        onlyWhitelistedOrPublic
+        returns (uint256 _assetsOut)
+    {
+        _assetsOut = super.redeem(_sharesIn, _receiver, _owner);
+    }
+
+    /// @dev Get the price of the custodian oracle
+    /// @return _price The price of the custodian oracle
+    function getCustodianOraclePrice() public view returns (uint256 _price) {
+        if (lastOracleUpdate == block.number) {
+            _price = lastSavedOraclePrice;
+        } else {
+            (, int256 _answer,, uint256 _chainlinkUpdatedAt,) = AggregatorV3Interface(custodianOracle).latestRoundData();
+            // If data is stale or negative, revert
+            if (_answer <= 0 || ((block.timestamp - _chainlinkUpdatedAt) > maximumOracleDelay)) revert OracleError();
+            _price = uint256(_answer);
+        }
+    }
+
+    /// @dev Internal conversion function (from assets to shares) with support for rounding direction.
+    /// @param _assets Amount of underlying tokens to convert to shares
+    /// @param _rounding Math.Rounding rounding direction
+    /// @return _shares Amount of shares represented by the given underlying tokens
+    function _convertToShares(uint256 _assets, Math.Rounding _rounding)
+        internal
+        view
+        override
+        returns (uint256 _shares)
+    {
+        _shares = Math.mulDiv(
+            super._convertToShares(_assets, _rounding), (10 ** oracleDecimals), getCustodianOraclePrice(), _rounding
+        );
+    }
+
+    /// @dev Internal conversion function (from shares to assets) with support for rounding direction
+    /// @param _shares Amount of shares to convert to underlying tokens
+    /// @param _rounding Math.Rounding rounding direction
+    /// @return _assets Amount of underlying tokens represented by the given number of shares
+    function _convertToAssets(uint256 _shares, Math.Rounding _rounding)
+        internal
+        view
+        override
+        returns (uint256 _assets)
+    {
+        _assets = Math.mulDiv(
+            super._convertToAssets(_shares, _rounding), getCustodianOraclePrice(), (10 ** oracleDecimals), _rounding
+        );
+    }
+
+    /// @notice Set whitelist status for an address
+    /// @param _address The address to update in the whitelist
+    /// @param _isWhitelisted True to add to whitelist, false to remove
+    function setWhitelistStatus(address _address, bool _isWhitelisted) external onlyOwner {
+        whitelist[_address] = _isWhitelisted;
+        emit WhitelistUpdated(_address, _isWhitelisted);
+    }
+
+    /// @notice Set the public flag to allow anyone to mint/redeem
+    /// @param _isPublic True to allow anyone, false to restrict to whitelist
+    function setPublic(bool _isPublic) external onlyOwner {
+        isPublic = _isPublic;
+        emit PublicFlagUpdated(_isPublic);
+    }
+
+    /// @notice Check if an address is whitelisted or if public access is enabled
+    /// @param _address The address to check
+    /// @return True if the address can mint/redeem
+    function canMintRedeem(address _address) external view returns (bool) {
+        return isPublic || whitelist[_address];
+    }
+
+    // EVENTS
+    // ===================================================
+
+    /// @notice Emitted when an address is added or removed from the whitelist
+    /// @param account The address that was updated
+    /// @param isWhitelisted Whether the address is now whitelisted
+    event WhitelistUpdated(address indexed account, bool isWhitelisted);
+
+    /// @notice Emitted when the public flag is updated
+    /// @param isPublic Whether public access is now enabled
+    event PublicFlagUpdated(bool isPublic);
+
+    // ERRORS
+    // ===================================================
+
+    /// @notice Reverts if the oracle has an error
+    error OracleError();
+}

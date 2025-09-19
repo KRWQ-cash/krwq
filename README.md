@@ -414,6 +414,57 @@ forge test --gas-report
 forge test --match-path test/ForkTest.t.sol --fork-url $RPC_URL
 ```
 
+### Cross-Chain Transfer (LayerZero OFT)
+
+Use `script/SendKRWT.s.sol` to transfer KRWT between Ethereum and Base using LayerZero V2 OFT. The script composes `SendParam`, quotes fees, and calls `send` on the source chain OFT (Adapter on Ethereum or OFT on Base).
+
+Env vars:
+
+```bash
+export PRIVATE_KEY=<hex_no_0x>
+export ETH_ADAPTER=<adapter_proxy_on_ethereum>  # or BASE_OFT=<oft_proxy_on_base>
+export DST_EID=<destination_endpoint_id>        # default: 30184 (Base)
+export TO=<recipient_on_destination_chain>      # default: sender
+export AMOUNT=<amount_in_local_decimals>        # default: 1e18
+
+# Optional
+export MIN_BPS=9950          # min amount tolerance (0.5% slippage)
+export GAS_LIMIT=80000       # executor gas for lzReceive
+export PAY_IN_LZ_TOKEN=false # keep false unless using EndpointV2Alt
+export REFUND=<refund_address> # defaults to sender
+# Auto-approval (Ethereum Adapter only)
+export AUTO_APPROVE=true       # auto-approve adapter when required
+export INFINITE_APPROVE=false  # approve max allowance instead of amount
+```
+
+Send from Ethereum (Adapter) → Base (OFT):
+
+```bash
+# If adapter requires approval of the underlying token
+cast call $ETH_ADAPTER "approvalRequired()" --rpc-url $ETH_RPC_URL | grep -q true && \
+  cast send <KRWT_TOKEN_ADDRESS> "approve(address,uint256)" $ETH_ADAPTER $AMOUNT \
+  --rpc-url $ETH_RPC_URL --private-key $PRIVATE_KEY || true
+
+forge script script/SendKRWT.s.sol \
+  --rpc-url $ETH_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast -vvvv
+```
+
+Send from Base (OFT) → Ethereum (Adapter):
+
+```bash
+forge script script/SendKRWT.s.sol \
+  --rpc-url $BASE_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast -vvvv
+```
+
+Notes:
+- Keep `GAS_LIMIT` aligned with your enforced options if you set them via `setEnforcedOptions`.
+- For OFT Alt (pay fees in ERC20), use EndpointV2Alt and set `PAY_IN_LZ_TOKEN=true`.
+- Reference: LayerZero V2 OFT Quickstart (`https://docs.layerzero.network/v2/developers/evm/oft/quickstart`).
+
 ## 🔒 Security Considerations
 
 - **🔐 Ownership**: Use two-step ownership transfer for security

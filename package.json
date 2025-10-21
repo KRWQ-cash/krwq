@@ -27,5 +27,8 @@
     "@layerzerolabs/oft-evm": "^3.2.1",
     "@layerzerolabs/oft-evm-upgradeable": "^3.2.0",
     "@openzeppelin/contracts-upgradeable": "^5.4.0"
-  }
+  },
+  "devDependencies": {
+  "forge-std": "github:foundry-rs/forge-std#v1.8.1"
+}
 }

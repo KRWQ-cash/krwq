@@ -163,7 +163,13 @@ contract KRWTCustodian is Ownable2Step, ReentrancyGuard {
      * @dev See {IERC4626-maxDeposit}
      * Contract KRWT -> custodianTkn needed
      */
-    function maxDeposit(address /* _addr */ ) public view returns (uint256 _maxAssetsIn) {
+    function maxDeposit(
+        address /* _addr */
+    )
+        public
+        view
+        returns (uint256 _maxAssetsIn)
+    {
         // See how much custodianTkn you would need to exchange for 100% of the KRWT available under the cap
         if (krwtMinted >= mintCap) _maxAssetsIn = 0;
         else _maxAssetsIn = previewMint(mintCap - krwtMinted);
@@ -176,7 +182,13 @@ contract KRWTCustodian is Ownable2Step, ReentrancyGuard {
      * @dev See {IERC4626-maxMint}
      * Contract KRWT balance
      */
-    function maxMint(address /* _addr */ ) public view returns (uint256 _maxSharesOut) {
+    function maxMint(
+        address /* _addr */
+    )
+        public
+        view
+        returns (uint256 _maxSharesOut)
+    {
         // See how much KRWT is actually available in the contract
         if (krwtMinted >= mintCap) _maxSharesOut = 0;
         else _maxSharesOut = mintCap - krwtMinted;

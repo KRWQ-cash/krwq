@@ -167,12 +167,12 @@ contract KRWTUpgradeForkTest is Test {
             return;
         }
 
-    proxy = KRWT(PROXY);
-    proxyAdmin = ProxyAdmin(PROXY_ADMIN);
-    owner = proxy.owner();
-    thirdParty = makeAddr("thirdParty");
-    alice = makeAddr("alice");
-    bob = makeAddr("bob");
+        proxy = KRWT(PROXY);
+        proxyAdmin = ProxyAdmin(PROXY_ADMIN);
+        owner = proxy.owner();
+        thirdParty = makeAddr("thirdParty");
+        alice = makeAddr("alice");
+        bob = makeAddr("bob");
 
         console.log("=== Fork Test Configuration ===");
         console.log("Chain ID:", block.chainid);
@@ -194,8 +194,7 @@ contract KRWTUpgradeForkTest is Test {
         KRWTV2Unprotected newImpl = new KRWTV2Unprotected(address(1), "", "");
         console.log("Deployed unprotected implementation:", address(newImpl));
 
-        bytes memory initData =
-            abi.encodeWithSelector(KRWTV2Unprotected.initializeV2.selector, owner, "KRWQ", "KRWQ");
+        bytes memory initData = abi.encodeWithSelector(KRWTV2Unprotected.initializeV2.selector, owner, "KRWQ", "KRWQ");
 
         vm.prank(owner);
         proxyAdmin.upgradeAndCall(ITransparentUpgradeableProxy(PROXY), address(newImpl), initData);
@@ -274,27 +273,27 @@ contract KRWTUpgradeForkTest is Test {
 
         console.log("\n=== Test: State Preservation ===");
 
-    vm.prank(owner);
-    proxy.addMinter(address(this));
+        vm.prank(owner);
+        proxy.addMinter(address(this));
 
-    uint256 aliceMint = 1_000 ether;
-    uint256 bobMint = 2_000 ether;
+        uint256 aliceMint = 1_000 ether;
+        uint256 bobMint = 2_000 ether;
 
-    proxy.minterMint(alice, aliceMint);
-    proxy.minterMint(bob, bobMint);
+        proxy.minterMint(alice, aliceMint);
+        proxy.minterMint(bob, bobMint);
 
-    uint256 supplyBefore = proxy.totalSupply();
-    address ownerBefore = proxy.owner();
-    string memory nameBefore = proxy.name();
-    uint256 aliceBalanceBefore = proxy.balanceOf(alice);
-    uint256 bobBalanceBefore = proxy.balanceOf(bob);
+        uint256 supplyBefore = proxy.totalSupply();
+        address ownerBefore = proxy.owner();
+        string memory nameBefore = proxy.name();
+        uint256 aliceBalanceBefore = proxy.balanceOf(alice);
+        uint256 bobBalanceBefore = proxy.balanceOf(bob);
 
-    console.log("State before upgrade:");
-    console.log("  Total Supply:", supplyBefore);
-    console.log("  Owner:", ownerBefore);
-    console.log("  Name:", nameBefore);
-    console.log("  Alice balance:", aliceBalanceBefore);
-    console.log("  Bob balance:", bobBalanceBefore);
+        console.log("State before upgrade:");
+        console.log("  Total Supply:", supplyBefore);
+        console.log("  Owner:", ownerBefore);
+        console.log("  Name:", nameBefore);
+        console.log("  Alice balance:", aliceBalanceBefore);
+        console.log("  Bob balance:", bobBalanceBefore);
 
         KRWTV2Protected newImpl = new KRWTV2Protected(address(1), "", "");
 
@@ -325,5 +324,4 @@ contract KRWTUpgradeForkTest is Test {
 
         console.log("  Result: All state preserved correctly, including holder balances");
     }
-
 }

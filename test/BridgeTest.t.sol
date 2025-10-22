@@ -29,7 +29,14 @@ contract MockLayerZeroEndpoint {
         sendLibrary[oapp][dstEid] = lib;
     }
 
-    function setReceiveLibrary(address oapp, uint32 srcEid, address lib, uint256 /* version */ ) external {
+    function setReceiveLibrary(
+        address oapp,
+        uint32 srcEid,
+        address lib,
+        uint256 /* version */
+    )
+        external
+    {
         receiveLibrary[oapp][srcEid] = lib;
     }
 

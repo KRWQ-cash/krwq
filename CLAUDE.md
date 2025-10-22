@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-KRWT (Korean Won Token) is a Solidity smart contract system implementing a stablecoin with ERC4626 vault functionality, Chainlink oracle integration, and LayerZero cross-chain bridging. The codebase uses Foundry for development and testing.
+KRWQ (Korean Won Q Token) is a Solidity smart contract system implementing a stablecoin with ERC4626 vault functionality, Chainlink oracle integration, and LayerZero cross-chain bridging. The codebase uses Foundry for development and testing.
 
 **Key Technical Details:**
 - Solidity version: ^0.8.24
@@ -50,7 +50,7 @@ forge test --match-path test/ForkTest.t.sol --fork-url $RPC_URL
 
 ## Deployment Commands
 
-The project deploys across two chains: **Ethereum** (KRWT token, Custodian, OFT Adapter) and **Base** (OFT token).
+The project deploys across two chains: **Ethereum** (KRWQ token, Custodian, OFT Adapter) and **Base** (OFT token).
 
 ### Local Development
 ```bash
@@ -74,7 +74,7 @@ forge script script/DeployOFT.s.sol \
   --broadcast --verify -vvvv
 ```
 
-**2. Deploy KRWT + Custodian + Adapter on Ethereum:**
+**2. Deploy KRWQ + Custodian + Adapter on Ethereum:**
 ```bash
 forge script script/DeployAll.s.sol \
   --rpc-url $ETH_RPC_URL \
@@ -123,65 +123,65 @@ forge script script/SendKRWT.s.sol \
 
 The system uses a **hub-and-spoke architecture** across Ethereum and Base chains:
 
-- **Ethereum (Hub)**: Primary chain hosting the main KRWT token, ERC4626 Custodian vault (with/without oracle), and the OFT Adapter
+- **Ethereum (Hub)**: Primary chain hosting the main KRWQ token, ERC4626 Custodian vault (with/without oracle), and the OFT Adapter
 - **Base (Spoke)**: Secondary chain hosting the bridged OFT token implementation
 
 **Cross-chain flow:**
-1. User deposits assets into KRWTCustodian on Ethereum → receives KRWT shares
-2. User can bridge KRWT from Ethereum → Base using LayerZero OFT Adapter/OFT pair
-3. The OFT Adapter on Ethereum locks KRWT, LayerZero mints equivalent on Base OFT
+1. User deposits assets into KRWQCustodian on Ethereum → receives KRWQ shares
+2. User can bridge KRWQ from Ethereum → Base using LayerZero OFT Adapter/OFT pair
+3. The OFT Adapter on Ethereum locks KRWQ, LayerZero mints equivalent on Base OFT
 4. Reverse flow burns on Base, unlocks on Ethereum
 
 ### Core Contract Relationships
 
 ```
-KRWT.sol (ERC20 + Permit + Burnable)
+KRWQ.sol (ERC20 + Permit + Burnable)
     ↓ (is minter for)
-KRWTCustodian.sol (ERC4626-like vault)
+KRWQCustodian.sol (ERC4626-like vault)
     ↓ (extended by)
-KRWTCustodianWithOracle.sol (adds Chainlink price feeds)
+KRWQCustodianWithOracle.sol (adds Chainlink price feeds)
 
-KRWT.sol
+KRWQ.sol
     ↓ (wrapped by)
-KRWTOFTAdapter.sol (Ethereum) ←→ LayerZero ←→ KRWTOFT.sol (Base)
+KRWQOFTAdapter.sol (Ethereum) ←→ LayerZero ←→ KRWQOFT.sol (Base)
 ```
 
 ### Key Design Patterns
 
 **1. Proxy Pattern for Upgradeability:**
-- KRWT uses TransparentUpgradeableProxy (owner acts as proxy admin, no separate ProxyAdmin)
-- KRWTOFT and KRWTOFTAdapter use LayerZero's upgradeable OFT pattern
+- KRWQ uses TransparentUpgradeableProxy (owner acts as proxy admin, no separate ProxyAdmin)
+- KRWQOFT and KRWQOFTAdapter use LayerZero's upgradeable OFT pattern
 - Contracts have both `constructor` and `initialize()` functions for proxy compatibility
 
 **2. Minter Pattern:**
-- KRWT maintains a `mapping(address => bool) minters` and `address[] mintersArray`
+- KRWQ maintains a `mapping(address => bool) minters` and `address[] mintersArray`
 - Only authorized minters can call `minterMint()` and `minterBurnFrom()`
-- KRWTCustodian is added as a minter to enable vault deposit/redeem operations
+- KRWQCustodian is added as a minter to enable vault deposit/redeem operations
 - Owner manages minters via `addMinter()` and `removeMinter()`
 
 **3. ERC4626-Style Vault (not fully compliant):**
-- KRWTCustodian implements deposit/mint/withdraw/redeem pattern
+- KRWQCustodian implements deposit/mint/withdraw/redeem pattern
 - Includes configurable mint and redeem fees (basis points)
-- Enforces mint cap to limit total KRWT issuance
+- Enforces mint cap to limit total KRWQ issuance
 - Asset recovery function for owner to rescue stuck tokens
-- **Important**: Uses KRWT shares directly (not a separate vault token)
+- **Important**: Uses KRWQ shares directly (not a separate vault token)
 
 **4. Oracle Integration:**
-- KRWTCustodianWithOracle extends base custodian with Chainlink price feeds
+- KRWQCustodianWithOracle extends base custodian with Chainlink price feeds
 - Validates oracle freshness via `maxOracleDelay` parameter
 - Overrides `_convertToShares()` and `_convertToAssets()` to use oracle prices
 - Enables price-based conversions rather than 1:1 decimal-adjusted conversions
 
 **5. LayerZero OFT V2:**
-- KRWTOFT (Base): Native OFT implementation with upgradeable pattern
-- KRWTOFTAdapter (Ethereum): Adapter pattern wrapping existing KRWT token
+- KRWQOFT (Base): Native OFT implementation with upgradeable pattern
+- KRWQOFTAdapter (Ethereum): Adapter pattern wrapping existing KRWQ token
 - Both use `OAppCore` for peer configuration and message libraries
 - Owner configures trusted peers via `setPeer()` and enforced options via `setEnforcedOptions()`
 
 ### Storage and Initialization
 
-**KRWT initialization quirk:**
-- `initialize()` directly writes to storage slots 3 and 4 for ERC20 name/symbol (see KRWT.sol:65-66)
+**KRWQ initialization quirk:**
+- `initialize()` directly writes to storage slots 3 and 4 for ERC20 name/symbol (see KRWQ.sol:65-66)
 - This is for proxy compatibility - avoids constructor storage writes
 - Owner check: `require(owner() == address(0), "Already initialized")`
 
@@ -203,21 +203,21 @@ KRWTOFTAdapter.sol (Ethereum) ←→ LayerZero ←→ KRWTOFT.sol (Base)
 - Example: 50 = 0.5% fee (50 / 1e18 = 0.00005)
 
 **Mint Cap:**
-- Enforced in KRWTCustodian via `krwtMinted` accounting
-- Tracks total KRWT minted through vault operations
-- `_deposit()` reverts if `krwtMinted + shares > mintCap`
-- `_withdraw()` decrements `krwtMinted` (safely handles underflow)
+- Enforced in KRWQCustodian via `krwqMinted` accounting
+- Tracks total KRWQ minted through vault operations
+- `_deposit()` reverts if `krwqMinted + shares > mintCap`
+- `_withdraw()` decrements `krwqMinted` (safely handles underflow)
 
 ## Contract Locations
 
 **Core contracts:**
-- `src/KRWT.sol` - Main ERC20 token with minter system
-- `src/KRWTCustodian.sol` - ERC4626-style vault (no oracle)
-- `src/KRWTCustodianWithOracle.sol` - Oracle-enabled vault (extends Custodian)
+- `src/KRWQ.sol` - Main ERC20 token with minter system
+- `src/KRWQCustodian.sol` - ERC4626-style vault (no oracle)
+- `src/KRWQCustodianWithOracle.sol` - Oracle-enabled vault (extends Custodian)
 
 **Bridge contracts:**
-- `src/bridge/KRWTOFT.sol` - LayerZero OFT for Base chain
-- `src/bridge/KRWTOFTAdapter.sol` - LayerZero OFT Adapter for Ethereum chain
+- `src/bridge/KRWQOFT.sol` - LayerZero OFT for Base chain
+- `src/bridge/KRWQOFTAdapter.sol` - LayerZero OFT Adapter for Ethereum chain
 
 **Test utilities:**
 - `test/mocks/MockERC20.sol` - Mock ERC20 for testing
@@ -225,16 +225,16 @@ KRWTOFTAdapter.sol (Ethereum) ←→ LayerZero ←→ KRWTOFT.sol (Base)
 - `test/ForkTest.t.sol` - Fork testing utilities
 
 **Scripts:**
-- `script/DeployAll.s.sol` - Orchestrator script deploying KRWT + Custodian + Adapter on Ethereum
+- `script/DeployAll.s.sol` - Orchestrator script deploying KRWQ + Custodian + Adapter on Ethereum
 - `script/DeployOFT.s.sol` - Deploys OFT on Base
 - `script/DeployConfig.s.sol` - Configures LayerZero for Ethereum Adapter
 - `script/DeployConfigOFT.s.sol` - Configures LayerZero for Base OFT
-- `script/SendKRWT.s.sol` - Cross-chain transfer script
+- `script/SendKRWQ.s.sol` - Cross-chain transfer script
 - `script/utils/LZConfigUtils.sol` - LayerZero configuration helper functions
 
 ## Important Development Notes
 
-**When modifying KRWT token:**
+**When modifying KRWQ token:**
 - Remember that `minterMint()` and `minterBurnFrom()` require caller to be in `minters` mapping
 - The `mintersArray` is sparse (uses address(0) for removed entries) - iterate carefully
 - `initialize()` writes directly to storage slots - be cautious with storage layout changes
@@ -271,14 +271,14 @@ Required for deployment scripts:
 PRIVATE_KEY=
 
 # Token configuration
-TOKEN_NAME="Korean Won Token"
-TOKEN_SYMBOL="KRWT"
+TOKEN_NAME="Korean Won Q Token"
+TOKEN_SYMBOL="KRWQ"
 
 # Custodian configuration
 CUSTODIAN_TOKEN_ADDRESS=        # Underlying asset address
 CUSTODIAN_ORACLE_ADDRESS=       # Chainlink oracle address (for WithOracle variant)
 MAX_ORACLE_DELAY=               # Max staleness in seconds
-MINT_CAP=                       # Max KRWT mintable (wei units)
+MINT_CAP=                       # Max KRWQ mintable (wei units)
 MINT_FEE=                       # Basis points (e.g., 50 for 0.5%)
 REDEEM_FEE=                     # Basis points
 

@@ -1,12 +1,12 @@
-# 🪙 KRWT Token Contracts
+# 🪙 KRWQ Token Contracts
 
-A comprehensive Solidity implementation of Korean Won Token (KRWT) with advanced features including ERC4626 vault functionality, LayerZero cross-chain bridging, and Oracle integration. Built using Foundry and OpenZeppelin contracts.
+A comprehensive Solidity implementation of Korean Won Q Token (KRWQ) with advanced features including ERC4626 vault functionality, LayerZero cross-chain bridging, and Oracle integration. Built using Foundry and OpenZeppelin contracts.
 
 ## 🌟 Overview
 
-The KRWT ecosystem consists of multiple interconnected contracts that provide:
+The KRWQ ecosystem consists of multiple interconnected contracts that provide:
 
-- **🪙 KRWT Token**: ERC20-compliant token with minting capabilities
+- **🪙 KRWQ Token**: ERC20-compliant token with minting capabilities
 - **🏦 Custodian Vault**: ERC4626-compliant vault for asset management
 - **📊 Oracle Integration**: Chainlink price feed integration for accurate pricing
 - **🌉 Cross-Chain Bridge**: LayerZero-powered cross-chain token transfers
@@ -22,7 +22,7 @@ The KRWT ecosystem consists of multiple interconnected contracts that provide:
 
 ### Core Contracts
 
-#### 🪙 KRWT Token (`KRWT.sol`)
+#### 🪙 KRWQ Token (`KRWQ.sol`)
 - **ERC20Permit**: EIP-2612 permit functionality for gasless approvals
 - **ERC20Burnable**: Ability to burn tokens
 - **Ownable2Step**: Two-step ownership transfer for enhanced security
@@ -31,29 +31,29 @@ The KRWT ecosystem consists of multiple interconnected contracts that provide:
 - **Initialization**: Supports both constructor and initialize() for proxy deployment
 - **Storage Slots**: Uses OpenZeppelin StorageSlot for proxy compatibility
 
-#### 🏦 KRWT Custodian (`KRWTCustodian.sol`)
+#### 🏦 KRWQ Custodian (`KRWQCustodian.sol`)
 - **ERC4626 Compliance**: Standard vault interface for asset management
-- **Mint/Redeem Operations**: Deposit underlying assets to mint KRWT shares
+- **Mint/Redeem Operations**: Deposit underlying assets to mint KRWQ shares
 - **Fee Management**: Configurable mint and redeem fees
 - **Mint Cap**: Configurable maximum minting limit
 - **Asset Recovery**: Owner can recover stuck tokens
 
-#### 📊 KRWT Custodian with Oracle (`KRWTCustodianWithOracle.sol`)
+#### 📊 KRWQ Custodian with Oracle (`KRWQCustodianWithOracle.sol`)
 - **Chainlink Integration**: Real-time price feeds for accurate conversions
 - **Oracle Validation**: Staleness checks and maximum delay enforcement
 - **Price-Based Conversions**: Dynamic asset-to-share conversions based on oracle prices
 
 ### Bridge Contracts
 
-#### 🌉 KRWT OFT (`KRWTOFT.sol`)
+#### 🌉 KRWQ OFT (`KRWQOFT.sol`)
 - **LayerZero Integration**: Cross-chain token transfers
 - **Upgradeable**: Built on LayerZero's upgradeable OFT standard
 - **Gas Efficient**: Optimized for cross-chain operations
 - **Initialization**: Requires LayerZero endpoint and delegate address
 - **Deployment**: Deployed on Base chain for cross-chain operations
 
-#### 🔗 KRWT OFT Adapter (`KRWTOFTAdapter.sol`)
-- **Token Wrapping**: Wraps existing KRWT tokens for cross-chain transfers
+#### 🔗 KRWQ OFT Adapter (`KRWQOFTAdapter.sol`)
+- **Token Wrapping**: Wraps existing KRWQ tokens for cross-chain transfers
 - **Backward Compatibility**: Works with existing token deployments
 - **Flexible Integration**: Can be deployed alongside existing tokens
 - **Deployment**: Deployed on Ethereum chain, connects to Base OFT
@@ -62,17 +62,17 @@ The KRWT ecosystem consists of multiple interconnected contracts that provide:
 
 ```
 ├── 📂 src/
-│   ├── 🪙 KRWT.sol                           # Main token contract
-│   ├── 🏦 KRWTCustodian.sol                  # ERC4626 vault contract
-│   ├── 📊 KRWTCustodianWithOracle.sol        # Oracle-enabled vault
+│   ├── 🪙 KRWQ.sol                           # Main token contract
+│   ├── 🏦 KRWQCustodian.sol                  # ERC4626 vault contract
+│   ├── 📊 KRWQCustodianWithOracle.sol        # Oracle-enabled vault
 │   ├── 📂 bridge/
-│   │   ├── 🌉 KRWTOFT.sol                    # LayerZero OFT contract
-│   │   └── 🔗 KRWTOFTAdapter.sol             # LayerZero OFT Adapter
+│   │   ├── 🌉 KRWQOFT.sol                    # LayerZero OFT contract
+│   │   └── 🔗 KRWQOFTAdapter.sol             # LayerZero OFT Adapter
 │   └── 📂 interfaces/
 │       └── 📡 AggregatorV3Interface.sol      # Chainlink oracle interface
 ├── 📂 script/
-│   ├── 🚀 DeployKRWT.s.sol                   # Token deployment script
-│   ├── 🏦 DeployKRWTCustodianWithOracle.s.sol # Oracle vault deployment
+│   ├── 🚀 DeployKRWQ.s.sol                   # Token deployment script
+│   ├── 🏦 DeployKRWQCustodianWithOracle.s.sol # Oracle vault deployment
 │   ├── 🌉 DeployOFT.s.sol                    # OFT deployment script
 │   ├── 🔗 DeployOFTAdapter.s.sol             # OFT Adapter deployment
 │   ├── ⚙️ DeployConfig.s.sol                 # LayerZero config (Ethereum)
@@ -82,9 +82,9 @@ The KRWT ecosystem consists of multiple interconnected contracts that provide:
 │   └── 📂 utils/
 │       └── 🔧 LZConfigUtils.sol              # LayerZero configuration utilities
 ├── 📂 test/
-│   ├── 🧪 KRWT.t.sol                         # Token tests
-│   ├── 🏦 KRWTCustodian.t.sol                # Vault tests
-│   ├── 📊 KRWTCustodianWithOracle.t.sol      # Oracle vault tests
+│   ├── 🧪 KRWQ.t.sol                         # Token tests
+│   ├── 🏦 KRWQCustodian.t.sol                # Vault tests
+│   ├── 📊 KRWQCustodianWithOracle.t.sol      # Oracle vault tests
 │   ├── 🌉 BridgeTest.t.sol                   # Bridge functionality tests
 │   ├── 🔀 ForkTest.t.sol                     # Fork testing utilities
 │   └── 📂 mocks/
@@ -105,14 +105,18 @@ The KRWT ecosystem consists of multiple interconnected contracts that provide:
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/IQAIcom/ikrw_contracts.git
-cd ikrw-contracts
+git clone https://github.com/IQAIcom/krwq_contracts.git
+cd krwq-contracts
 
-# Install Foundry dependencies
-forge install
+# Install Foundry dependencies (git submodules)
+# This installs forge-std and openzeppelin-contracts automatically
+git submodule update --init --recursive
 
-# Install Node.js dependencies
+# Install Node.js dependencies (LayerZero contracts)
 npm install
+
+# Build contracts to verify installation
+forge build
 ```
 
 ### Environment Setup
@@ -121,7 +125,7 @@ Create a `.env` file with your configuration:
 # Required
 PRIVATE_KEY=your_private_key_here
 TOKEN_NAME=Korean Won Token
-TOKEN_SYMBOL=KRWT
+TOKEN_SYMBOL=KRWQ
 
 # Optional
 RPC_URL=https://your-rpc-url-here
@@ -171,29 +175,29 @@ forge snapshot --diff
 anvil
 
 # 🚀 Deploy to local network
-forge script script/DeployKRWT.s.sol --rpc-url http://localhost:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast
+forge script script/DeployKRWQ.s.sol --rpc-url http://localhost:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast
 ```
 
 ### Testnet/Mainnet
 ```bash
 # 🧪 Deploy to testnet
-forge script script/DeployKRWT.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast --verify
+forge script script/DeployKRWQ.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast --verify
 
 # 🌐 Deploy to mainnet (be careful!)
-forge script script/DeployKRWT.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast --verify --slow
+forge script script/DeployKRWQ.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast --verify --slow
 ```
 
 ### Chain Deployment (in order)
 
-The OFT token is deployed on Base, while KRWT, the Custodian, and the OFT Adapter are deployed on Ethereum.
+The OFT token is deployed on Base, while KRWQ, the Custodian, and the OFT Adapter are deployed on Ethereum.
 
-1) Base: deploy OFT (KRWTOFT)
+1) Base: deploy OFT (KRWQOFT)
 
 ```bash
 # Required env
 export PRIVATE_KEY=<deployer_pk_hex_no_0x>
 export TOKEN_NAME="Korean Won Token"
-export TOKEN_SYMBOL="KRWT"
+export TOKEN_SYMBOL="KRWQ"
 export LZ_ENDPOINT_BASE=<base_lz_endpoint_address>
 export OWNER_BASE=<final_owner_address_on_base> # also acts as proxy admin
 
@@ -202,10 +206,10 @@ forge script script/DeployOFT.s.sol \
   --rpc-url $BASE_RPC_URL \
   --private-key $PRIVATE_KEY \
   --broadcast --verify -vvvv
-# Note the KRWTOFT proxy address from logs as BASE_OFT
+# Note the KRWQOFT proxy address from logs as BASE_OFT
 ```
 
-2) Ethereum: deploy KRWT, Custodian with Oracle, and OFT Adapter
+2) Ethereum: deploy KRWQ, Custodian with Oracle, and OFT Adapter
 
 Use the orchestrator to deploy and wire everything on Ethereum in one go.
 
@@ -214,7 +218,7 @@ Use the orchestrator to deploy and wire everything on Ethereum in one go.
 export PRIVATE_KEY=<deployer_pk_hex_no_0x>
 export OWNER_ETH=<final_owner_address_on_eth> # also acts as proxy admin
 export TOKEN_NAME="Korean Won Token"
-export TOKEN_SYMBOL="KRWT"
+export TOKEN_SYMBOL="KRWQ"
 export CUSTODIAN_TOKEN_ADDRESS=<underlying_custodian_asset>
 export CUSTODIAN_ORACLE_ADDRESS=<chainlink_oracle_address>
 export MAX_ORACLE_DELAY=<seconds>
@@ -229,7 +233,7 @@ forge script script/DeployAll.s.sol \
   --private-key $PRIVATE_KEY \
   --broadcast --verify -vvvv
 # Note from logs:
-#  - KRWT Proxy -> KRWT proxy address (KRWT_ADDRESS)
+#  - KRWQ Proxy -> KRWQ proxy address (KRWQ_ADDRESS)
 #  - Custodian Proxy -> custodian proxy address
 #  - OFTAdapter Proxy -> adapter proxy address (ETH_ADAPTER)
 ```
@@ -393,9 +397,9 @@ The comprehensive test suite covers:
 - ✅ **Gas Optimization**: Efficient operation costs
 
 ### Test Structure
-- **KRWT.t.sol**: Core token functionality and EIP-2612 permit testing
-- **KRWTCustodian.t.sol**: ERC4626 vault operations and fee management
-- **KRWTCustodianWithOracle.t.sol**: Oracle integration and price-based conversions
+- **KRWQ.t.sol**: Core token functionality and EIP-2612 permit testing
+- **KRWQCustodian.t.sol**: ERC4626 vault operations and fee management
+- **KRWQCustodianWithOracle.t.sol**: Oracle integration and price-based conversions
 - **BridgeTest.t.sol**: LayerZero bridge functionality with mock endpoint
 - **ForkTest.t.sol**: Fork testing utilities for real network simulation
 
@@ -405,7 +409,7 @@ Run tests with:
 forge test -vvv
 
 # Run specific test file
-forge test --match-path test/KRWT.t.sol
+forge test --match-path test/KRWQ.t.sol
 
 # Run with gas reporting
 forge test --gas-report
@@ -416,7 +420,7 @@ forge test --match-path test/ForkTest.t.sol --fork-url $RPC_URL
 
 ### Cross-Chain Transfer (LayerZero OFT)
 
-Use `script/SendKRWT.s.sol` to transfer KRWT between Ethereum and Base using LayerZero V2 OFT. The script composes `SendParam`, quotes fees, and calls `send` on the source chain OFT (Adapter on Ethereum or OFT on Base).
+Use `script/SendKRWQ.s.sol` to transfer KRWQ between Ethereum and Base using LayerZero V2 OFT. The script composes `SendParam`, quotes fees, and calls `send` on the source chain OFT (Adapter on Ethereum or OFT on Base).
 
 Env vars:
 
@@ -442,10 +446,10 @@ Send from Ethereum (Adapter) → Base (OFT):
 ```bash
 # If adapter requires approval of the underlying token
 cast call $ETH_ADAPTER "approvalRequired()" --rpc-url $ETH_RPC_URL | grep -q true && \
-  cast send <KRWT_TOKEN_ADDRESS> "approve(address,uint256)" $ETH_ADAPTER $AMOUNT \
+  cast send <KRWQ_TOKEN_ADDRESS> "approve(address,uint256)" $ETH_ADAPTER $AMOUNT \
   --rpc-url $ETH_RPC_URL --private-key $PRIVATE_KEY || true
 
-forge script script/SendKRWT.s.sol \
+forge script script/SendKRWQ.s.sol \
   --rpc-url $ETH_RPC_URL \
   --private-key $PRIVATE_KEY \
   --broadcast -vvvv
@@ -454,7 +458,7 @@ forge script script/SendKRWT.s.sol \
 Send from Base (OFT) → Ethereum (Adapter):
 
 ```bash
-forge script script/SendKRWT.s.sol \
+forge script script/SendKRWQ.s.sol \
   --rpc-url $BASE_RPC_URL \
   --private-key $PRIVATE_KEY \
   --broadcast -vvvv
@@ -499,14 +503,55 @@ This project is licensed under the MIT License - see the SPDX-License-Identifier
 5. ✅ Ensure all tests pass
 6. 📤 Submit a pull request
 
+## 🔧 Troubleshooting
+
+### Build Errors
+
+**Error: "Source 'lib/forge-std/src/Test.sol' not found"**
+
+This means Foundry dependencies (git submodules) are not installed. Run:
+```bash
+git submodule update --init --recursive
+```
+
+**Error: "Source 'lib/openzeppelin-contracts/contracts/...' not found"**
+
+Install git submodules:
+```bash
+git submodule update --init --recursive
+```
+
+**General dependency issues**
+
+If you cloned the repository and have missing dependencies:
+```bash
+# Install all Foundry dependencies (git submodules)
+git submodule update --init --recursive
+
+# Install Node.js dependencies (LayerZero packages)
+npm install
+
+# Verify installation
+forge build
+```
+
+**Alternative: Manual installation**
+
+If git submodules don't work, you can install dependencies manually:
+```bash
+forge install foundry-rs/forge-std
+forge install openzeppelin/openzeppelin-contracts
+npm install
+```
+
 ## 🆘 Support
 
-For questions or issues, please open an issue on the [GitHub repository](https://github.com/IQAIcom/ikrw_contracts/issues).
+For questions or issues, please open an issue on the [GitHub repository](https://github.com/IQAIcom/krwq_contracts/issues).
 
 ## 🔗 Links
 
-- **Repository**: [GitHub](https://github.com/IQAIcom/ikrw_contracts)
-- **Issues**: [GitHub Issues](https://github.com/IQAIcom/ikrw_contracts/issues)
+- **Repository**: [GitHub](https://github.com/IQAIcom/krwq_contracts)
+- **Issues**: [GitHub Issues](https://github.com/IQAIcom/krwq_contracts/issues)
 - **LayerZero**: [LayerZero Documentation](https://docs.layerzero.network/)
 - **OpenZeppelin**: [OpenZeppelin Contracts](https://docs.openzeppelin.com/contracts/)
 - **Foundry**: [Foundry Book](https://book.getfoundry.sh/)

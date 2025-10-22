@@ -66,6 +66,16 @@ contract KRWQ is ERC20Permit, ERC20Burnable, Ownable2Step {
         StorageSlot.getBytesSlot(bytes32(uint256(4))).value = bytes(_symbol);
     }
 
+    /// @notice Update token name and symbol metadata
+    /// @dev Can be called by owner at any time to update token metadata
+    /// @param _name New ERC20 name
+    /// @param _symbol New ERC20 symbol
+    function updateMetadata(string memory _name, string memory _symbol) public onlyOwner {
+        StorageSlot.getBytesSlot(bytes32(uint256(3))).value = bytes(_name);
+        StorageSlot.getBytesSlot(bytes32(uint256(4))).value = bytes(_symbol);
+        emit MetadataUpdated(_name, _symbol);
+    }
+
     /* ========== MODIFIERS ========== */
 
     /// @notice A modifier that only allows a minters to call
@@ -156,4 +166,9 @@ contract KRWQ is ERC20Permit, ERC20Burnable, Ownable2Step {
     /// @param to The account that gets the newly minted tokens
     /// @param amount Amount of tokens minted
     event TokenMinterMinted(address indexed from, address indexed to, uint256 amount);
+
+    /// @notice Emitted when token metadata (name/symbol) is updated
+    /// @param name New token name
+    /// @param symbol New token symbol
+    event MetadataUpdated(string name, string symbol);
 }

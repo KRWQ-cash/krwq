@@ -28,6 +28,7 @@ pragma solidity ^0.8.24;
 */
 
 import {OFTUpgradeable} from "@layerzerolabs/oft-evm-upgradeable/contracts/oft/OFTUpgradeable.sol";
+import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
 contract KRWQOFT is OFTUpgradeable {
     constructor(address _lzEndpoint) OFTUpgradeable(_lzEndpoint) {
@@ -37,5 +38,9 @@ contract KRWQOFT is OFTUpgradeable {
     function initialize(string memory _name, string memory _symbol, address _delegate) public initializer {
         __OFT_init(_name, _symbol, _delegate);
         __Ownable_init(_delegate);
+    }
+
+    function reinitialize(string memory _name, string memory _symbol) public reinitializer(2) {
+        __ERC20_init_unchained(_name, _symbol);
     }
 }

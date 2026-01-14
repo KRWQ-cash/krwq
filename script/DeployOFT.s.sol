@@ -24,7 +24,6 @@ contract DeployOFT is Script {
         string memory name = vm.envString("TOKEN_NAME");
         string memory symbol = vm.envString("TOKEN_SYMBOL");
         address lzEndpoint = vm.envAddress("LZ_ENDPOINT_BASE");
-        address owner = vm.envAddress("OWNER_BASE");
 
         vm.startBroadcast(pk);
 
@@ -41,7 +40,7 @@ contract DeployOFT is Script {
         );
 
         // 3) Transparent proxy with owner as admin
-        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(address(impl), owner, initData);
+        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(address(impl), deployer, initData);
         console.log("KRWTOFT proxy:", address(proxy));
 
         vm.stopBroadcast();
